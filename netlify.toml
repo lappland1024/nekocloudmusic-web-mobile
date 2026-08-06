@@ -1,0 +1,13 @@
+# Netlify 部署配置
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA 路由回退（本地开发可用 npm run dev）
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

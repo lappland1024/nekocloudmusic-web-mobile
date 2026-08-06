@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "dist",
+  "nodeVersion": "22.21.1",
+  "rewrites": [
+    { "source": "/*", "destination": "/index.html" }
+  ]
+}
