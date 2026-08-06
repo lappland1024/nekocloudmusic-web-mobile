@@ -78,7 +78,12 @@ export function Home() {
         </div>
         <button className="avatar-btn" onClick={() => navigate('/me')} aria-label={t('nav.me')}>
           {user ? (
-            <img src={apiUrl(`/api/user/avatar/${user.id}`)} alt={user.username} onError={(e) => ((e.target as HTMLImageElement).style.visibility = 'hidden')} />
+            <img
+              key={user.id}
+              src={apiUrl(`/api/user/avatar/${user.id}`)}
+              alt={user.username}
+              onError={(e) => ((e.target as HTMLImageElement).style.visibility = 'hidden')}
+            />
           ) : (
             <Icon name="user" size={22} />
           )}

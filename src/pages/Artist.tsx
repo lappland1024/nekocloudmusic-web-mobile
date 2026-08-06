@@ -20,7 +20,13 @@ export function Artist() {
 
   useEffect(() => {
     let alive = true
-    const query = decodeURIComponent(name)
+    // 非法百分号编码（如 %E0%A4%A）会让 decodeURIComponent 抛 URIError，兜底用原始值
+    let query = name
+    try {
+      query = decodeURIComponent(name)
+    } catch {
+      /* 保持原始 name */
+    }
     searchArtist(query)
       .then((r) => {
         if (!alive) return

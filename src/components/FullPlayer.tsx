@@ -140,8 +140,15 @@ export function FullPlayer() {
     if (activeLine < 0) return
     if (!wide && view !== 'lyrics') return
     const box = lyricBoxRef.current
-    const el = box?.querySelector(`[data-line="${activeLine}"]`)
-    el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    const el = box?.querySelector(`[data-line="${activeLine}"]`) as HTMLElement | null
+    if (box && el) {
+      // 只滚动歌词容器本身（scrollTo 不会向上冒泡）。
+      // 注意：不要用 scrollIntoView —— 它会继续滚动所有可滚动祖先，
+      // 把 .full-player（overflow:hidden 的可编程滚动容器）也滚掉，
+      // 导致整个播放器内容上移、顶部收起/收藏按钮被裁掉点不到。
+      const target = el.offsetTop - box.clientHeight / 2 + el.offsetHeight / 2
+      box.scrollTo({ top: target, behavior: 'smooth' })
+    }
   }, [activeLine, view])
 
   if (!expanded) return null

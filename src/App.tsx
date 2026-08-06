@@ -111,6 +111,37 @@ export default function App() {
     return () => mq.removeEventListener('change', apply)
   }, [style, mode])
 
+  useEffect(() => {
+    // iOS 旋转屏幕 / 尺寸变化后，fixed 元素（全屏播放器等）偶发"渲染偏移"：
+    // 布局位置正常但内容被渲染到视口外（头部上移、点不到收起/收藏）。
+    // 除强制 reflow 外，再对 fixed 全屏层做一次合成层重置
+    // （translateZ(0) → 下一帧移除），强制浏览器按新视口重新合成。
+    const refresh = () => {
+      requestAnimationFrame(() => {
+        void document.body.offsetHeight // 强制 reflow
+        document.querySelectorAll('.full-player').forEach((fp) => {
+          const el = fp as HTMLElement
+          el.style.willChange = 'transform'
+          el.style.transform = 'translateZ(0)'
+        })
+        requestAnimationFrame(() => {
+          document.querySelectorAll('.full-player').forEach((fp) => {
+            const el = fp as HTMLElement
+            el.style.transform = ''
+            el.style.willChange = ''
+          })
+          void document.body.offsetHeight
+        })
+      })
+    }
+    window.addEventListener('orientationchange', refresh)
+    window.addEventListener('resize', refresh)
+    return () => {
+      window.removeEventListener('orientationchange', refresh)
+      window.removeEventListener('resize', refresh)
+    }
+  }, [])
+
   return (
     <BrowserRouter>
       <ScrollToTop />

@@ -118,6 +118,7 @@ export function TrackList({
   const list = tracks.map(toTrack)
   const playQueue = usePlayer((s) => s.playQueue)
   const current = usePlayer((s) => s.queue[s.index]?.id)
+  const isPlaying = usePlayer((s) => s.playing)
   const favIds = useFavorites((s) => s.ids)
   const toggleFav = useFavorites((s) => s.toggle)
   const openTrackActions = useToast((s) => s.openTrackActions)
@@ -134,7 +135,7 @@ export function TrackList({
           key={`${tr.id}-${i}`}
           track={tr}
           index={showIndex ? startIndex + i : undefined}
-          playing={tr.id === current}
+          playing={isPlaying && tr.id === current}
           favorited={noHeart ? undefined : favIds.includes(tr.id)}
           showIndex={showIndex}
           onPlay={() => play(i)}
@@ -177,7 +178,8 @@ export function TrackActionSheets() {
       a.href = url
       a.download = `${track.title}.mp3`
       a.click()
-      URL.revokeObjectURL(url)
+      // 延迟释放：Safari 需要下载真正开始后再 revoke，否则会中断下载
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch {
       toast('err.network', 'error')
     }

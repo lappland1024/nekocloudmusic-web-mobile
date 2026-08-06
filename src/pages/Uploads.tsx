@@ -45,6 +45,8 @@ export function Uploads() {
   const [readingDur, setReadingDur] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  // 记录当前待读取的 object URL，换文件/卸载时释放，避免泄漏
+  const objectUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!token) return
@@ -53,11 +55,27 @@ export function Uploads() {
       .catch(() => setList([]))
   }, [token])
 
+  // 卸载时释放未完成的 object URL
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current)
+        objectUrlRef.current = null
+      }
+    }
+  }, [])
+
   const onPickFile = (f: File | null) => {
     setMusicFile(f)
     if (!f) return
+    // 换文件时先释放上一个未读完的 object URL
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current)
+      objectUrlRef.current = null
+    }
     setReadingDur(true)
     const url = URL.createObjectURL(f)
+    objectUrlRef.current = url
     const a = audioRef.current ?? new Audio()
     audioRef.current = a
     a.preload = 'metadata'
@@ -65,11 +83,17 @@ export function Uploads() {
     a.onloadedmetadata = () => {
       setDuration(Math.round(a.duration))
       setReadingDur(false)
-      URL.revokeObjectURL(url)
+      if (objectUrlRef.current === url) {
+        URL.revokeObjectURL(url)
+        objectUrlRef.current = null
+      }
     }
     a.onerror = () => {
       setReadingDur(false)
-      URL.revokeObjectURL(url)
+      if (objectUrlRef.current === url) {
+        URL.revokeObjectURL(url)
+        objectUrlRef.current = null
+      }
     }
   }
 

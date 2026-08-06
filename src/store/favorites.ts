@@ -26,11 +26,14 @@ export const useFavorites = create<FavState>()((set, get) => ({
     set({ loading: true })
     try {
       const list = await getFavorites()
+      // 请求期间登出/换账号：丢弃过期响应，避免把上一用户的收藏灌回状态
+      if (useAuth.getState().token !== token) return
       set({ ids: list.map((m) => m.id), loaded: true })
     } catch {
       // 静默失败，下次再试
     } finally {
-      set({ loading: false })
+      // 仅当仍是同一账号时复位 loading（登出会走 reset 复位）
+      if (useAuth.getState().token === token) set({ loading: false })
     }
   },
 
@@ -61,7 +64,7 @@ export const useFavorites = create<FavState>()((set, get) => ({
     }
   },
 
-  reset: () => set({ ids: [], loaded: false }),
+  reset: () => set({ ids: [], loaded: false, loading: false }),
 }))
 
 // 登出时清空收藏缓存

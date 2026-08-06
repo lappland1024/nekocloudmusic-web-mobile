@@ -91,16 +91,27 @@ function setupMediaSession(usePlayer: () => PlayerState) {
 
 let mediaSessionReady = false
 
+// 曲目加载序号：快速切歌时 el.play() 的旧 Promise 会以 AbortError reject，
+// 用序号丢弃过期回调，避免误改新曲目的 playing/loading 状态
+let loadId = 0
+
 export const usePlayer = create<PlayerState>((set, get) => {
   const el = getAudio()
 
   const load = (track: Track, autoplay: boolean) => {
+    const id = ++loadId
     el.src = apiUrl(`/api/music/file/${track.id}`)
     set({ currentTime: 0, duration: track.duration || 0, loading: true })
     if (autoplay) {
       el.play().then(
-        () => set({ playing: true, loading: false }),
-        () => set({ playing: false, loading: false }),
+        () => {
+          if (id !== loadId) return // 已切歌，丢弃过期回调
+          set({ playing: true, loading: false })
+        },
+        () => {
+          if (id !== loadId) return
+          set({ playing: false, loading: false })
+        },
       )
     } else {
       set({ loading: false })
@@ -167,8 +178,10 @@ export const usePlayer = create<PlayerState>((set, get) => {
 
     playQueue: (tracks, startIndex = 0) => {
       if (tracks.length === 0) return
-      set({ queue: tracks, index: startIndex })
-      load(tracks[startIndex], true)
+      // 越界兜底，避免取到 undefined
+      const i = Math.min(Math.max(startIndex, 0), tracks.length - 1)
+      set({ queue: tracks, index: i })
+      load(tracks[i], true)
     },
 
     playNextTrack: (track) => {
@@ -207,9 +220,16 @@ export const usePlayer = create<PlayerState>((set, get) => {
             return
           }
         }
+        const id = loadId
         el.play().then(
-          () => set({ playing: true }),
-          () => set({ playing: false }),
+          () => {
+            if (id !== loadId) return
+            set({ playing: true })
+          },
+          () => {
+            if (id !== loadId) return
+            set({ playing: false })
+          },
         )
       }
     },

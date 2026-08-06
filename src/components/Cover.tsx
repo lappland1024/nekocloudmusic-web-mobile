@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { apiUrl } from '../api/client'
 import { Icon } from './Icon'
 
@@ -21,6 +21,11 @@ export function Cover({ src, alt = '', className, musicId, rounded }: CoverProps
     : musicId != null
       ? `/api/music/cover/${musicId}`
       : undefined
+
+  // src/musicId 变化时重置失败状态：列表行复用、数据刷新后能重新加载封面
+  useEffect(() => {
+    setFailed(false)
+  }, [url])
 
   const show = url && !failed
 

@@ -40,10 +40,13 @@ export function Search() {
   const [artist, setArtist] = useState<{ name: string; musicCount: number; musicList: Music[] } | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
+  // 自增请求序号：丢弃过期响应，防止快速连续搜索时旧结果覆盖新结果
+  const searchSeq = useRef(0)
 
   const search = async (keyword?: string) => {
     const kw = (keyword ?? q).trim()
     if (!kw) return
+    const seq = ++searchSeq.current
     setQ(kw)
     setBusy(true)
     setDone(false)
@@ -59,16 +62,20 @@ export function Search() {
         searchPlaylists(kw),
         searchArtist(kw),
       ])
+      if (seq !== searchSeq.current) return // 已过期，丢弃
       setSongs(s)
       setPlaylists(p)
       setArtist(a)
     } catch {
+      if (seq !== searchSeq.current) return
       setSongs([])
       setPlaylists([])
       setArtist({ name: '', musicCount: 0, musicList: [] })
     } finally {
-      setBusy(false)
-      setDone(true)
+      if (seq === searchSeq.current) {
+        setBusy(false)
+        setDone(true)
+      }
     }
   }
 
@@ -99,6 +106,12 @@ export function Search() {
               className="icon-btn"
               onClick={() => {
                 setQ('')
+                searchSeq.current++ // 使进行中的请求过期
+                setSongs(null)
+                setPlaylists(null)
+                setArtist(null)
+                setBusy(false)
+                setDone(false)
                 inputRef.current?.focus()
               }}
               aria-label="clear"

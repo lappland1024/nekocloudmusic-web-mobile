@@ -82,6 +82,11 @@ export function Me() {
               ;(e.currentTarget.parentElement!.querySelector('.me-avatar-fallback') as HTMLElement).style.display =
                 'flex'
             }}
+            onLoad={(e) => {
+              // 头像加载成功后复位 fallback（之前失败时可能被置为 flex，会与图片叠加）
+              const fb = e.currentTarget.parentElement!.querySelector('.me-avatar-fallback') as HTMLElement | null
+              if (fb) fb.style.display = ''
+            }}
           />
           <span className="me-avatar-fallback">
             <Logo size={56} />

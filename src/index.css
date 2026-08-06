@@ -32,7 +32,6 @@
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --tabbar-h: 58px;
-
   /* 随主题切换的组件背景（白天模式在下方 :root[data-theme='neko-light'] 覆盖） */
   --tabbar-bg: rgba(27, 21, 35, 0.88);
   --mini-bg: rgba(33, 26, 43, 0.95);
@@ -41,6 +40,37 @@
   --range-track: rgba(255, 255, 255, 0.14);
   --edge-bg: #0e0b13;
   --fp-bg: radial-gradient(120% 80% at 50% 0%, #2b2040 0%, #1b1425 55%, #140f1b 100%);
+}
+
+/* ============================================================
+   PWA（添加到主屏 / standalone）与浏览器直接打开：分开适配
+   - 浏览器模式：Safari 的 URL 栏自己占住状态栏区域，页面视觉上始终从
+     状态栏下方开始；此时 env(safe-area-inset-top) 会随 URL 栏收起/展开在
+     0 ↔ 47px 间跳变，若顶栏用它会让头部跟着跳动"穿模"。故固定为 0，
+     让 sticky 头部贴住可视区顶部（Safari 已保证可视区在状态栏下方）。
+   - standalone 模式：没有 URL 栏，状态栏直接覆盖页面顶部、Home Indicator
+     覆盖底部，需用 env() 真实安全区让出，避免顶栏被状态栏遮挡、底部空白。
+   ============================================================ */
+@media (display-mode: browser) {
+  :root {
+    --sat: 0px;
+  }
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* standalone 横屏：刘海在侧边，env(safe-area-inset-top) 恒为 0，
+   但 iOS 状态栏（约 21px）仍叠加在页面顶部，会把 fixed 的播放器头部
+   （收起/收藏按钮）视觉"上移"到状态栏下面、点不到。保底让出 21px。 */
+@media (display-mode: standalone) and (orientation: landscape) {
+  :root {
+    --sat: max(env(safe-area-inset-top, 0px), 21px);
+  }
 }
 
 * {
@@ -58,6 +88,8 @@ body,
 
 html {
   background: var(--bg);
+  /* 消除双击缩放（standalone 下 viewport 的 user-scalable=no 已禁双指缩放） */
+  touch-action: manipulation;
 }
 
 body {
@@ -140,15 +172,17 @@ textarea {
 /* ---------------- 页面容器 ---------------- */
 
 /* 视口固定：页面自身是唯一的滚动容器，框架元素（TabBar/迷你条/全屏播放器）始终固定；
-   滚动条隐藏，信息流仍可滚动（触摸/滚轮），缩放与分辨率变化时自动适配 */
+   滚动条隐藏，信息流仍可滚动（触摸/滚轮），缩放与分辨率变化时自动适配。
+   高度由 flex 链（.shell → .content → .route-view → .page）拉伸确定，
+   不依赖 100dvh：iOS 添加到主屏（standalone）下 dvh/视口计算有差异，
+   用与 fixed 元素相同的 ICB 链撑满，可避免底部出现大块空白 */
 .page {
   flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
-  padding: calc(var(--sat) + 14px) 16px calc(var(--tabbar-h) + var(--sab) + 88px);
-  height: 100%;
-  height: 100dvh;
+  padding: 0 16px calc(var(--tabbar-h) + var(--sab) + 88px);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
@@ -169,13 +203,15 @@ body.body-locked .page {
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 48px;
+  min-height: 48px;
   margin: 0 -4px 10px;
+  /* 顶部通栏：sticky 吸顶到 0，安全区由自身 padding 消化，
+     背景铺到屏幕最顶端（status bar 之下），内容保持在安全区下方 */
   position: sticky;
-  top: var(--sat);
+  top: 0;
   z-index: 20;
   background: linear-gradient(to bottom, var(--bg) 55%, transparent);
-  padding-top: 2px;
+  padding-top: calc(var(--sat) + 2px);
 }
 
 .page-head.transparent {
@@ -1006,6 +1042,10 @@ input[type='number']::-webkit-inner-spin-button {
   background: var(--fp-bg);
   padding-top: var(--sat);
   overflow: hidden;
+  /* 禁止被 scrollIntoView 等编程滚动（overflow:hidden 的元素可编程滚动，
+     会被歌词滚动的 scrollIntoView 冒泡滚掉，导致整个播放器内容上移、
+     顶部收起/收藏按钮被裁掉点不到）。overflow:clip 的 scrollTop 恒为 0 */
+  overflow: clip;
 }
 
 .fp-blur {
@@ -1258,6 +1298,8 @@ input[type='number']::-webkit-inner-spin-button {
   color: var(--text-3);
   text-align: center;
   line-height: 1.6;
+  /* 双语歌词（原文 + 换行的翻译）保持换行显示 */
+  white-space: pre-line;
   transition: color 0.3s, transform 0.3s;
 }
 
@@ -1334,13 +1376,14 @@ input[type='number']::-webkit-inner-spin-button {
 
 .home-head {
   position: sticky;
-  top: var(--sat);
+  top: 0;
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0 6px;
-  margin: -8px 0 0;
+  /* 顶部通栏：背景铺到屏幕顶端，内容（logo/头像）由 padding 让出状态栏 */
+  padding: calc(var(--sat) + 8px) 0 6px;
+  margin: 0;
   background: linear-gradient(to bottom, var(--bg) 72%, transparent);
 }
 
@@ -1769,10 +1812,11 @@ input[type='number']::-webkit-inner-spin-button {
 
 .search-bar-wrap {
   position: sticky;
-  top: calc(var(--sat));
+  top: 0;
   z-index: 20;
-  margin: -8px -16px 4px;
-  padding: 8px 16px 10px;
+  margin: 0 -16px 4px;
+  /* 顶部通栏：背景铺到屏幕顶端，搜索条内容由 padding 让出状态栏 */
+  padding: calc(var(--sat) + 8px) 16px 10px;
   background: linear-gradient(to bottom, var(--bg) 82%, transparent);
 }
 
@@ -3225,7 +3269,7 @@ input[type='number']::-webkit-inner-spin-button {
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  display: block;
+  display: flex;
 }
 
 /* 歌单网格：手机 2 列 → 平板 3 列 → 横屏 4 列 */
@@ -3556,7 +3600,9 @@ input[type='number']::-webkit-inner-spin-button {
   --route-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* 全屏播放器打开：从底部上滑呈现（iOS Music 风格） */
+/* 全屏播放器打开：淡入呈现。
+   注意：动画刻意不用 transform —— iOS 上动画被中断/旋转时 transform 偶发残留，
+   会让播放器整体偏移（"页面上移"、头部点不到）。只用 opacity 最稳妥。 */
 .full-player {
   animation: fp-present 0.44s var(--ease-ios, cubic-bezier(0.32, 0.72, 0, 1));
 }
@@ -3564,7 +3610,6 @@ input[type='number']::-webkit-inner-spin-button {
 @keyframes fp-present {
   from {
     opacity: 0;
-    transform: translateY(26px) scale(0.985);
   }
 }
 
@@ -3729,4 +3774,3 @@ input[type='number']::-webkit-inner-spin-button {
     inset 0 -18px 36px var(--glass-refl),
     var(--glass-shadow);
 }
-
