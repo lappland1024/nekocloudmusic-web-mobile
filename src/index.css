@@ -339,11 +339,10 @@ body.body-locked .page {
 }
 
 .btn-play {
-  background: rgba(20, 14, 8, 0.55);
-  color: var(--cream);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: linear-gradient(135deg, var(--accent), #ffc46e);
+  color: #241a10;
+  border: none;
+  box-shadow: 0 6px 18px rgba(255, 180, 84, 0.25);
 }
 
 .btn-fav {
@@ -622,6 +621,12 @@ input[type='number']::-webkit-inner-spin-button {
   align-items: center;
   justify-content: space-between;
   padding: 8px 2px 10px;
+}
+
+.sheet-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .sheet-title {
@@ -1141,27 +1146,11 @@ input[type='number']::-webkit-inner-spin-button {
   padding: 0 22px calc(18px + var(--sab));
 }
 
-.fp-tabs {
+/* 收藏按钮（进度条上方）：手机版放底部栏，平板版放封面列 */
+.fp-fav-row {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.fp-tab {
-  width: 44px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  color: var(--text-3);
-  transition: background 0.15s, color 0.15s;
-}
-
-.fp-tab.active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  margin-bottom: 14px;
 }
 
 .fp-progress {
@@ -1292,6 +1281,11 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 .lyric-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   margin: 0;
   padding: 8px 0;
   font-size: 15.5px;
@@ -1301,6 +1295,28 @@ input[type='number']::-webkit-inner-spin-button {
   /* 双语歌词（原文 + 换行的翻译）保持换行显示 */
   white-space: pre-line;
   transition: color 0.3s, transform 0.3s;
+}
+
+/* 歌词行旁边的小播放按钮：点击跳到该句（网易云/QQ 式），半透明常显、当前行点亮 */
+.lyric-seek {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-2);
+  opacity: 0.45;
+  transition: opacity 0.2s, color 0.2s, background 0.2s;
+}
+
+.lyric-line:hover .lyric-seek,
+.lyric-line.active .lyric-seek {
+  opacity: 1;
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .lyric-line.active {
@@ -1370,6 +1386,17 @@ input[type='number']::-webkit-inner-spin-button {
   text-align: center;
   color: var(--text-3);
   padding: 30px 0;
+}
+
+/* 队列一键清空：红色垃圾桶 */
+.queue-clear {
+  width: 32px;
+  height: 32px;
+  color: var(--danger);
+}
+
+.queue-clear:active {
+  background: var(--danger-soft);
 }
 
 /* ---------------- 首页 ---------------- */
@@ -1515,6 +1542,13 @@ input[type='number']::-webkit-inner-spin-button {
 
 .home-section {
   margin-top: 26px;
+  margin-bottom: 28px;
+}
+
+/* 热门排行展开/收起按钮 */
+.expand-btn {
+  width: 100%;
+  margin-top: 12px;
 }
 
 .section-head {
@@ -2597,11 +2631,6 @@ input[type='number']::-webkit-inner-spin-button {
   transform: none;
 }
 
-:root[data-theme^='ios'] .fp-tab.active {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
 /* 底部弹层：玻璃 + 顶部手柄 */
 :root[data-theme^='ios'] .sheet {
   background: var(--toast-bg);
@@ -2657,9 +2686,9 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 :root[data-theme^='ios'] .btn-play {
-  background: rgba(0, 0, 0, 0.25);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, var(--accent), #ffc46e);
+  color: #241a10;
+  border-color: transparent;
 }
 
 :root[data-theme^='ios'] .btn-fav {
@@ -2901,15 +2930,6 @@ input[type='number']::-webkit-inner-spin-button {
   transition: background 0.32s var(--ease-ios), color 0.22s, box-shadow 0.32s var(--ease-ios);
 }
 
-/* 播放器 tab 切换 */
-:root[data-theme^='ios'] .fp-tab {
-  transition: background 0.25s var(--ease-ios), color 0.25s, transform 0.25s var(--spring);
-}
-
-:root[data-theme^='ios'] .fp-tab:active {
-  transform: scale(0.9);
-}
-
 /* ============================================================
    Apple 官网风主题（apple.com 排版：大标题、纯色克制、无玻璃）
    深浅色由 data-theme='apple-light' / 'apple-dark' 独立驱动
@@ -3148,9 +3168,9 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 :root[data-theme^='apple'] .btn-play {
-  background: rgba(0, 0, 0, 0.3);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, var(--accent), #ffc46e);
+  color: #241a10;
+  border-color: transparent;
 }
 
 /* 卡片：无阴影纯色 */
@@ -3230,11 +3250,6 @@ input[type='number']::-webkit-inner-spin-button {
 
 :root[data-theme^='apple'] .fp-play svg {
   transform: none;
-}
-
-:root[data-theme^='apple'] .fp-tab.active {
-  background: var(--accent-soft);
-  color: var(--accent);
 }
 
 /* 交互反馈：克制的淡入过渡 */
@@ -3630,8 +3645,10 @@ input[type='number']::-webkit-inner-spin-button {
   min-width: 0;
 }
 
+/* 手机版封面列只展示封面：进度条/控制/收藏都放底部栏 */
 .fp-cover-col .fp-progress,
-.fp-cover-col .fp-controls {
+.fp-cover-col .fp-controls,
+.fp-cover-col .fp-fav {
   display: none;
 }
 
@@ -3662,8 +3679,10 @@ input[type='number']::-webkit-inner-spin-button {
 
   .fp-cover-col {
     flex: 1;
-    gap: 26px;
-    padding: 16px 32px;
+    /* 收藏按钮加入后整列变高，横屏矮视口（iPhone 横屏/iPad）容易把
+       底部控制按钮挤出容器下缘；间距收紧 + 顶部 padding 减小让内容上移 */
+    gap: 16px;
+    padding: 6px 32px 22px;
   }
 
   .fp-cover-wrap {
@@ -3671,15 +3690,22 @@ input[type='number']::-webkit-inner-spin-button {
   }
 
   .fp-cover {
-    width: min(40vmin, 380px);
+    width: min(38vmin, 360px);
   }
 
   /* 进度条与控制移到封面列下方 */
   .fp-cover-col .fp-progress,
-  .fp-cover-col .fp-controls {
+  .fp-cover-col .fp-controls,
+  .fp-cover-col .fp-fav {
     display: flex;
     width: 100%;
     max-width: 380px;
+  }
+
+  .fp-cover-col .fp-fav {
+    width: auto;
+    max-width: none;
+    justify-content: center;
   }
 
   .fp-lyrics-col {

@@ -65,6 +65,8 @@ const zh: Record<string, string> = {
   'home.dailyEmpty': '还没有推荐，先去热门里逛逛吧',
   'home.playDaily': '播放推荐',
   'home.viewAll': '查看全部',
+  'home.expand': '展开全部',
+  'home.collapse': '收起',
 
   // 搜索
   'search.placeholder': '搜索歌曲、歌单或歌手',
@@ -118,6 +120,8 @@ const zh: Record<string, string> = {
   'player.modeShuffle': '随机播放',
   'player.download': '下载音乐',
   'player.progress': '播放进度',
+  'player.clearQueue': '清空列表',
+  'player.seekTo': '跳转到该句',
 
   // 收藏
   'fav.title': '我的收藏',
@@ -314,6 +318,8 @@ const en: Record<string, string> = {
   'home.dailyEmpty': 'No picks yet — check the charts instead',
   'home.playDaily': 'Play Mix',
   'home.viewAll': 'See all',
+  'home.expand': 'Show all',
+  'home.collapse': 'Collapse',
 
   'search.placeholder': 'Songs, playlists or artists',
   'search.tab.song': 'Songs',
@@ -364,6 +370,8 @@ const en: Record<string, string> = {
   'player.modeShuffle': 'Shuffle',
   'player.download': 'Download',
   'player.progress': 'Progress',
+  'player.clearQueue': 'Clear queue',
+  'player.seekTo': 'Seek to this line',
 
   'fav.title': 'Favorites',
   'fav.empty': 'No favorite songs yet',

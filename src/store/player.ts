@@ -29,6 +29,7 @@ interface PlayerState {
   setView: (v: 'cover' | 'lyrics') => void
   setShowQueue: (v: boolean) => void
   removeFromQueue: (i: number) => void
+  clearQueue: () => void
 }
 
 let audio: HTMLAudioElement | null = null
@@ -287,6 +288,12 @@ export const usePlayer = create<PlayerState>((set, get) => {
         set({ queue: q, index: ni })
         load(q[ni], playing)
       }
+    },
+
+    clearQueue: () => {
+      el.pause()
+      el.removeAttribute('src')
+      set({ queue: [], index: -1, playing: false, currentTime: 0, duration: 0 })
     },
   }
 })

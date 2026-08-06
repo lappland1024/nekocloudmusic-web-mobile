@@ -77,11 +77,13 @@ interface SheetProps {
   onClose: () => void
   title?: ReactNode
   children: ReactNode
+  /** 标题栏右侧额外操作（关闭按钮左侧） */
+  right?: ReactNode
   /** 是否从底部滑入（默认 true） */
   bottom?: boolean
 }
 
-export function Sheet({ open, onClose, title, children, bottom = true }: SheetProps) {
+export function Sheet({ open, onClose, title, right, children, bottom = true }: SheetProps) {
   useBodyLock(open)
   useEffect(() => {
     if (!open) return
@@ -104,9 +106,12 @@ export function Sheet({ open, onClose, title, children, bottom = true }: SheetPr
         {title != null && (
           <div className="sheet-head">
             <span className="sheet-title">{title}</span>
-            <button className="icon-btn" onClick={onClose} aria-label="close">
-              <Icon name="x" size={20} />
-            </button>
+            <div className="sheet-head-actions">
+              {right}
+              <button className="icon-btn" onClick={onClose} aria-label="close">
+                <Icon name="x" size={20} />
+              </button>
+            </div>
           </div>
         )}
         {children}

@@ -9,6 +9,7 @@ import { Icon } from './Icon'
 import { Cover } from './Cover'
 import { Sheet, EmptyState } from './ui'
 import { useBodyLock } from '../hooks/useBodyLock'
+import { useToast } from '../store/ui'
 import { formatDur } from '../utils/format'
 
 const lyricCache = new Map<number, LrcLine[]>()
@@ -38,6 +39,27 @@ function PlayerProgress() {
       />
       <span className="fp-time">{formatDur(duration)}</span>
     </div>
+  )
+}
+
+/** 收藏按钮：放在进度条上方（手机版渲染于底部栏，平板版渲染于封面列） */
+function FpFavButton() {
+  const trackId = usePlayer((s) => s.queue[s.index]?.id)
+  const favIds = useFavorites((s) => s.ids)
+  const toggleFav = useFavorites((s) => s.toggle)
+  const t = useT()
+  const isFav = trackId != null && favIds.includes(trackId)
+  return (
+    <button
+      className={`icon-btn fp-fav ${isFav ? 'is-fav' : ''}`}
+      onClick={(e) => {
+        e.stopPropagation()
+        if (trackId != null) toggleFav(trackId)
+      }}
+      aria-label={t('fav.like')}
+    >
+      <Icon name={isFav ? 'heartFill' : 'heart'} size={22} />
+    </button>
   )
 }
 
@@ -105,8 +127,9 @@ export function FullPlayer() {
   const setExpanded = usePlayer((s) => s.setExpanded)
   const playQueue = usePlayer((s) => s.playQueue)
   const removeFromQueue = usePlayer((s) => s.removeFromQueue)
-  const favIds = useFavorites((s) => s.ids)
-  const toggleFav = useFavorites((s) => s.toggle)
+  const clearQueue = usePlayer((s) => s.clearQueue)
+  const seek = usePlayer((s) => s.seek)
+  const toast = useToast((s) => s.toast)
 
   const [lyrics, setLyrics] = useState<LrcLine[]>([])
   const lyricBoxRef = useRef<HTMLDivElement>(null)
@@ -134,6 +157,32 @@ export function FullPlayer() {
   }, [trackId])
 
   const activeLine = currentLine(lyrics, currentTime)
+
+  /** 下载当前歌曲（与列表菜单同一套逻辑） */
+  const download = async () => {
+    if (!track) return
+    try {
+      const res = await fetch(apiUrl(`/api/music/file/${track.id}`))
+      if (!res.ok) throw new Error(String(res.status))
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${track.title}.mp3`
+      a.click()
+      // 延迟释放：Safari 需要下载真正开始后再 revoke，否则会中断下载
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch {
+      toast('err.network', 'error')
+    }
+  }
+
+  /** 手机竖屏：轻点封面/歌词区域切换视图（网易云式）；平板（≥768px）并排分栏不切换 */
+  const onColTap = () => {
+    if (window.matchMedia('(min-width: 768px)').matches) return
+    setView(view === 'cover' ? 'lyrics' : 'cover')
+  }
+
   useEffect(() => {
     // 手机：仅歌词视图滚动；平板（≥768px 并排分栏）：始终跟随播放
     const wide = window.matchMedia('(min-width: 768px)').matches
@@ -172,12 +221,8 @@ export function FullPlayer() {
             <span className="fp-artist truncate">{track.artist || t('common.unknown')}</span>
           </div>
         )}
-        <button
-          className={`icon-btn ${favIds.includes(trackId ?? -1) ? 'is-fav' : ''}`}
-          onClick={() => trackId != null && toggleFav(trackId)}
-          aria-label={t('fav.like')}
-        >
-          <Icon name={favIds.includes(trackId ?? -1) ? 'heartFill' : 'heart'} size={22} />
+        <button className="icon-btn" onClick={download} aria-label={t('player.download')}>
+          <Icon name="download" size={20} />
         </button>
       </div>
 
@@ -185,18 +230,19 @@ export function FullPlayer() {
         <>
           <div className="fp-body">
             {/* 左侧：封面 + 进度条 + 控制（手机仅显示封面，平板并排全显） */}
-            <div className={`fp-cover-col ${view === 'cover' ? '' : 'hide'}`}>
+            <div className={`fp-cover-col ${view === 'cover' ? '' : 'hide'}`} onClick={onColTap}>
               <div className="fp-cover-wrap">
                 <div className="fp-cover">
                   <Cover src={track.coverUrl} musicId={track.id} rounded={22} />
                   {loading && <div className="fp-cover-loading" />}
                 </div>
               </div>
+              <FpFavButton />
               <PlayerProgress />
               <PlayerControls />
             </div>
             {/* 右侧：歌词（手机按 view 显隐，平板并排常显） */}
-            <div className={`fp-lyrics-col ${view === 'lyrics' ? '' : 'hide'}`}>
+            <div className={`fp-lyrics-col ${view === 'lyrics' ? '' : 'hide'}`} onClick={onColTap}>
               <div className="lyrics" ref={lyricBoxRef}>
                 {lyrics.length > 0 ? (
                   <div className="lyrics-inner">
@@ -206,7 +252,17 @@ export function FullPlayer() {
                         data-line={i}
                         className={`lyric-line ${i === activeLine ? 'active' : ''} ${l.text ? '' : 'empty'}`}
                       >
-                        {l.text || '♪'}
+                        <span className="lyric-text">{l.text || '♪'}</span>
+                        <button
+                          className="lyric-seek"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            seek(l.time)
+                          }}
+                          aria-label={t('player.seekTo')}
+                        >
+                          <Icon name="play" size={11} />
+                        </button>
                       </p>
                     ))}
                   </div>
@@ -217,21 +273,10 @@ export function FullPlayer() {
             </div>
           </div>
 
-          {/* 底部栏（手机版）：封面/歌词切换 + 进度条 + 控制 */}
+          {/* 底部栏（手机版）：收藏 + 进度条 + 控制；封面/歌词视图靠轻点切换 */}
           <div className="fp-foot">
-            <div className="fp-tabs">
-              <button
-                className={`fp-tab ${view === 'cover' ? 'active' : ''}`}
-                onClick={() => setView('cover')}
-              >
-                <Icon name="disc" size={18} />
-              </button>
-              <button
-                className={`fp-tab ${view === 'lyrics' ? 'active' : ''}`}
-                onClick={() => setView('lyrics')}
-              >
-                <Icon name="lyrics" size={18} />
-              </button>
+            <div className="fp-fav-row">
+              <FpFavButton />
             </div>
 
             <PlayerProgress />
@@ -248,7 +293,25 @@ export function FullPlayer() {
       )}
 
       {/* 播放队列 */}
-      <Sheet open={showQueue} onClose={() => setShowQueue(false)} title={`${t('player.queue')} · ${queue.length}`}>
+      <Sheet
+        open={showQueue}
+        onClose={() => setShowQueue(false)}
+        title={`${t('player.queue')} · ${queue.length}`}
+        right={
+          queue.length > 0 ? (
+            <button
+              className="icon-btn queue-clear"
+              onClick={() => {
+                clearQueue()
+                setShowQueue(false)
+              }}
+              aria-label={t('player.clearQueue')}
+            >
+              <Icon name="trash" size={18} />
+            </button>
+          ) : undefined
+        }
+      >
         <div className="queue-list">
           {queue.map((tr, i) => (
             <div

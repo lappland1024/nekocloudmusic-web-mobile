@@ -25,6 +25,7 @@ export function Home() {
   const [latest, setLatest] = useState<Music[] | null>(null)
   const [recs, setRecs] = useState<Recommendation[] | null>(null)
   const [error, setError] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   const load = useCallback(async () => {
     setError(false)
@@ -142,7 +143,16 @@ export function Home() {
         {ranking === null ? (
           <ListSkeleton rows={6} />
         ) : (
-          <TrackList tracks={ranking} showIndex startIndex={0} />
+          <>
+            {/* 默认只展示前 15 条，其余折叠，点击按钮展开/收起 */}
+            <TrackList tracks={expanded ? ranking : ranking.slice(0, 15)} showIndex startIndex={0} />
+            {ranking.length > 15 && (
+              <button className="btn btn-ghost expand-btn" onClick={() => setExpanded((v) => !v)}>
+                {expanded ? t('home.collapse') : t('home.expand')}
+                <Icon name={expanded ? 'chevronUp' : 'chevronDown'} size={16} />
+              </button>
+            )}
+          </>
         )}
       </section>
 
