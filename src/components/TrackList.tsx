@@ -161,28 +161,20 @@ export function TrackActionSheets() {
   const addToQueue = usePlayer((s) => s.addToQueue)
   const favIds = useFavorites((s) => s.ids)
   const toggleFav = useFavorites((s) => s.toggle)
-  const toast = useToast((s) => s.toast)
 
   const track = trackActions?.track
   if (!track) return null
 
   const isFav = favIds.includes(track.id)
 
-  const download = async () => {
-    try {
-      const res = await fetch(apiUrl(`/api/music/file/${track.id}`))
-      if (!res.ok) throw new Error(String(res.status))
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${track.title}.mp3`
-      a.click()
-      // 延迟释放：Safari 需要下载真正开始后再 revoke，否则会中断下载
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } catch {
-      toast('err.network', 'error')
-    }
+  const download = () => {
+    // iOS Safari 对 fetch blob + a.click() 下载不可靠（长音频会被"吞"），
+    // 改为直接打开音频 API 地址新页面，由 Safari 播放/下载该文件
+    const a = document.createElement('a')
+    a.href = apiUrl(`/api/music/file/${track.id}`)
+    a.target = '_blank'
+    a.rel = 'noopener'
+    a.click()
     close()
   }
 
