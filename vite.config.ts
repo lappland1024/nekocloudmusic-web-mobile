@@ -39,6 +39,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // NetworkFirst（workbox 默认）：正常时永远从网络拿最新 index.html，
+        // 断网/超时才回退本地缓存，保证新构建立即可见
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
         runtimeCaching: [
