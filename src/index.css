@@ -2113,6 +2113,286 @@ input[type='number']::-webkit-inner-spin-button {
   color: var(--text-3);
 }
 
+/* 会员中心入口卡片（我的页） */
+.me-vip-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-2-soft));
+  border: 1px solid rgba(255, 180, 84, 0.3);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: left;
+  transition: filter 0.12s;
+}
+
+.me-vip-card:active {
+  filter: brightness(0.95);
+}
+
+.me-vip-card-icon {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 11px;
+  background: rgba(255, 180, 84, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.me-vip-card-label {
+  flex: none;
+}
+
+.me-vip-card-sub {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------- 会员中心 ---------------- */
+
+.vip-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent-2-soft));
+  border: 1px solid rgba(255, 180, 84, 0.3);
+  margin-bottom: 22px;
+}
+
+.vip-badge {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 16px;
+  background: rgba(255, 180, 84, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.vip-badge.is-vip {
+  color: var(--accent-2);
+}
+
+.vip-status-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.vip-status-sub {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.vip-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 0;
+}
+
+.vip-plans {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.vip-plan {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.vip-plan.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.vip-plan-dur {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.vip-plan-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.vip-pay-types {
+  margin-bottom: 16px;
+}
+
+/* 支付面板（二维码 + 收银台链接） */
+.vip-pay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.vip-qrcode {
+  width: 180px;
+  height: 180px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  object-fit: contain;
+}
+
+.vip-order-no {
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+/* ---------------- 歌曲信息 ---------------- */
+
+.music-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.music-info-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.music-info-cover {
+  width: 84px;
+  height: 84px;
+  flex: none;
+  border-radius: 14px;
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+.music-info-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.music-info-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.music-info-dur {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.music-info-lyrics {
+  margin: 0;
+  padding: 14px;
+  max-height: 320px;
+  overflow-y: auto;
+  border-radius: 14px;
+  background: var(--surface-2);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+}
+
+/* ---------------- 分享视频 ---------------- */
+
+.video-share-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.video-share-wm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+.video-share-wm input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.video-share-wm-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+.video-share-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.video-share-done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.video-share-remaining {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
 .me-menu {
   display: flex;
   flex-direction: column;
@@ -3455,6 +3735,11 @@ input[type='number']::-webkit-inner-spin-button {
   .playlist-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
+  }
+
+  /* 会员套餐：3 列 */
+  .vip-plans {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   /* ---- iOS 液态玻璃：侧边栏玻璃化，取消底部胶囊悬浮 ---- */

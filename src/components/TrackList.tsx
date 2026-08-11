@@ -12,6 +12,8 @@ import { formatDur } from '../utils/format'
 import { Icon } from './Icon'
 import { Cover } from './Cover'
 import { Sheet } from './ui'
+import { MusicInfoSheet } from './MusicInfoSheet'
+import { VideoShareSheet } from './VideoShareSheet'
 
 // ---------- 播放中均衡器 ----------
 
@@ -161,6 +163,8 @@ export function TrackActionSheets() {
   const addToQueue = usePlayer((s) => s.addToQueue)
   const favIds = useFavorites((s) => s.ids)
   const toggleFav = useFavorites((s) => s.toggle)
+  const [infoTrack, setInfoTrack] = useState<Track | null>(null)
+  const [shareTrack, setShareTrack] = useState<Track | null>(null)
 
   const track = trackActions?.track
   if (!track) return null
@@ -178,8 +182,9 @@ export function TrackActionSheets() {
     close()
   }
 
-  const actions: { label: string; icon: string; onClick: () => void }[] = [
+  const actions: TrackAction[] = [
     {
+      key: 'play',
       label: t('track.play'),
       icon: 'play',
       onClick: () => {
@@ -188,6 +193,7 @@ export function TrackActionSheets() {
       },
     },
     {
+      key: 'playNext',
       label: t('track.playNext'),
       icon: 'next',
       onClick: () => {
@@ -196,6 +202,7 @@ export function TrackActionSheets() {
       },
     },
     {
+      key: 'addQueue',
       label: t('track.addQueue'),
       icon: 'plus',
       onClick: () => {
@@ -204,6 +211,7 @@ export function TrackActionSheets() {
       },
     },
     {
+      key: 'fav',
       label: isFav ? t('track.unfavorite') : t('track.favorite'),
       icon: 'heart',
       onClick: () => {
@@ -212,6 +220,7 @@ export function TrackActionSheets() {
       },
     },
     {
+      key: 'addToPlaylist',
       label: t('track.addToPlaylist'),
       icon: 'list',
       onClick: () => {
@@ -220,6 +229,7 @@ export function TrackActionSheets() {
       },
     },
     {
+      key: 'viewArtist',
       label: t('track.viewArtist'),
       icon: 'mic',
       onClick: () => {
@@ -228,29 +238,52 @@ export function TrackActionSheets() {
       },
     },
     {
+      key: 'download',
       label: t('player.download'),
       icon: 'download',
       onClick: download,
     },
+    {
+      key: 'info',
+      label: t('track.info'),
+      icon: 'info',
+      onClick: () => {
+        close()
+        setInfoTrack(track)
+      },
+    },
+    {
+      key: 'shareVideo',
+      label: t('track.shareVideo'),
+      icon: 'video',
+      onClick: () => {
+        close()
+        setShareTrack(track)
+      },
+    },
   ]
 
   return (
-    <Sheet open onClose={close} title={track.title}>
-      <div className="sheet-actions">
-        {(trackActions?.extras ?? []).map((a) => (
-          <button key={a.key} className={`sheet-action ${a.danger ? 'danger' : ''}`} onClick={a.onClick}>
-            <Icon name={a.icon} size={20} />
-            <span>{a.label}</span>
-          </button>
-        ))}
-        {actions.map((a) => (
-          <button key={a.label} className="sheet-action" onClick={a.onClick}>
-            <Icon name={a.icon} size={20} />
-            <span>{a.label}</span>
-          </button>
-        ))}
-      </div>
-    </Sheet>
+    <>
+      <Sheet open onClose={close} title={track.title}>
+        <div className="sheet-actions">
+          {actions.map((a) => (
+            <button key={a.key} className={`sheet-action ${a.danger ? 'danger' : ''}`} onClick={a.onClick}>
+              <Icon name={a.icon} size={20} />
+              <span>{a.label}</span>
+            </button>
+          ))}
+          {(trackActions?.extras ?? []).map((a) => (
+            <button key={a.key} className={`sheet-action ${a.danger ? 'danger' : ''}`} onClick={a.onClick}>
+              <Icon name={a.icon} size={20} />
+              <span>{a.label}</span>
+            </button>
+          ))}
+        </div>
+      </Sheet>
+      {infoTrack && <MusicInfoSheet track={infoTrack} onClose={() => setInfoTrack(null)} />}
+      {shareTrack && <VideoShareSheet track={shareTrack} onClose={() => setShareTrack(null)} />}
+    </>
   )
 }
 

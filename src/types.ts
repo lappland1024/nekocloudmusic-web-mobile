@@ -84,6 +84,39 @@ export interface VipPlan {
   updatedAt: string
 }
 
+/** VIP 购买下单结果（outTradeNo 订单号 / payurl 收银台 / qrcode 二维码） */
+export interface VipPayOrder {
+  outTradeNo: string
+  payurl: string
+  qrcode: string
+}
+
+/** 分享视频渲染任务 */
+export interface VideoRenderJob {
+  jobId: string
+  status: 'pending' | 'processing' | 'done' | 'failed'
+  isVip?: boolean
+  musicId?: number
+  durationSec?: number
+  watermarked?: boolean
+  /** 仅非 VIP 返回：今日剩余免费次数 */
+  remainingToday?: number
+  downloadUrl?: string
+  error?: string
+}
+
+/** 音乐详情（GET /api/music/info/{id}） */
+export interface MusicInfo {
+  id: number
+  title: string
+  artist: string
+  album: string
+  duration: number
+  coverUrl: string
+  fileUrl: string
+  lyrics: string
+}
+
 export interface ArtistResult {
   name: string
   musicCount: number

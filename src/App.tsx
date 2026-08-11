@@ -16,6 +16,7 @@ import { Favorites } from './pages/Favorites'
 import { Uploads } from './pages/Uploads'
 import { Artist } from './pages/Artist'
 import { Me } from './pages/Me'
+import { Vip } from './pages/Vip'
 import { Settings } from './pages/Settings'
 import { Auth } from './pages/Auth'
 
@@ -72,6 +73,7 @@ function AnimatedRoutes() {
         <Route path="/uploads" element={<Uploads />} />
         <Route path="/artist/:name" element={<Artist />} />
         <Route path="/me" element={<Me />} />
+        <Route path="/vip" element={<Vip />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="*" element={<Navigate to="/" replace />} />

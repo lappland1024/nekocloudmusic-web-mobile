@@ -4,9 +4,12 @@ import type {
   ArtistResult,
   CaptchaChallenge,
   Music,
+  MusicInfo,
   Playlist,
   Recommendation,
   User,
+  VideoRenderJob,
+  VipPayOrder,
   VipPlan,
 } from '../types'
 
@@ -235,16 +238,7 @@ export const searchArtist = async (query: string) => {
 }
 
 interface MusicInfoResp extends ApiResponse {
-  data?: {
-    id: number
-    title: string
-    artist: string
-    album: string
-    duration: number
-    coverUrl: string
-    fileUrl: string
-    lyrics: string
-  }
+  data?: MusicInfo
 }
 
 export const getMusicInfo = async (id: number) => {
@@ -286,6 +280,19 @@ export const getVipPricing = async () => {
   return r.data ?? []
 }
 
+interface VipPayResp extends ApiResponse {
+  data?: VipPayOrder
+}
+
+/** 发起 VIP 购买（返回收银台链接与二维码，会员开通在站内会员中心完成） */
+export const createVipPay = async (pricingId: number, payType: 'alipay' | 'wxpay' = 'alipay') => {
+  const r = await request<VipPayResp>('/api/vip/pay/create', {
+    method: 'POST',
+    body: { pricingId, payType },
+  })
+  return r.data!
+}
+
 // ---------- 人机验证 ----------
 
 interface CaptchaResp extends ApiResponse {
@@ -313,15 +320,7 @@ export const verifyCaptcha = async (captchaToken: string, captchaOffsetX: number
 // ---------- 分享视频 ----------
 
 interface VideoRenderResp extends ApiResponse {
-  data?: {
-    jobId: string
-    status: string
-    isVip: boolean
-    durationSec: number
-    watermarked: boolean
-    musicId: number
-    remainingToday?: number
-  }
+  data?: VideoRenderJob
 }
 
 export const createVideoRender = async (musicId: number, startSec = 0, watermarked = true) => {
@@ -329,5 +328,11 @@ export const createVideoRender = async (musicId: number, startSec = 0, watermark
     method: 'POST',
     body: { musicId, startSec, watermarked },
   })
+  return r.data!
+}
+
+/** 查询分享视频渲染任务状态（仅本人任务） */
+export const getVideoRender = async (jobId: string) => {
+  const r = await request<VideoRenderResp>(`/api/video/render/${jobId}`)
   return r.data!
 }

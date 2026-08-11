@@ -47,6 +47,7 @@ export function Me() {
   }
 
   const menu: { key: string; icon: string; to: string }[] = [
+    { key: 'vip.title', icon: 'crown', to: '/vip' },
     { key: 'me.favorites', icon: 'heart', to: '/favorites' },
     { key: 'me.myPlaylists', icon: 'list', to: '/my-playlists' },
     { key: 'me.uploads', icon: 'upload', to: '/uploads' },
@@ -113,6 +114,18 @@ export function Me() {
           <p className="me-vip-until">{t('me.vipUntil', { date: fmtDate(vipExpiresAt) })}</p>
         )}
       </div>
+
+      {/* 会员中心入口 */}
+      <button className="me-vip-card" onClick={() => navigate('/vip')}>
+        <span className="me-vip-card-icon">
+          <Icon name="crown" size={20} />
+        </span>
+        <span className="me-vip-card-label">{t('vip.title')}</span>
+        {isVip && vipExpiresAt && (
+          <span className="me-vip-card-sub">{t('vip.expires', { date: fmtDate(vipExpiresAt) })}</span>
+        )}
+        <Icon name="chevronRight" size={18} className="me-menu-arrow" />
+      </button>
 
       <div className="me-menu">
         {menu.map((m) => (
