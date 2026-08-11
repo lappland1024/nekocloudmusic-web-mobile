@@ -84,11 +84,22 @@ export interface VipPlan {
   updatedAt: string
 }
 
-/** VIP 购买下单结果（outTradeNo 订单号 / payurl 收银台 / qrcode 二维码） */
+/** VIP 购买下单结果（Z-Pay 网关）
+ *  注意：qrcode 与 payurl 都是**支付链接**（不是图片），
+ *  真正的二维码图片是 img；payurl2 是 H5 收银台地址。 */
 export interface VipPayOrder {
   outTradeNo: string
+  /** 网关订单号 */
+  O_id?: string
+  trade_no?: string
+  /** 支付链接（PC/扫码用） */
   payurl: string
-  qrcode: string
+  /** H5 收银台链接（移动端浏览器直接跳转用） */
+  payurl2?: string
+  /** 同为支付链接，不是图片 */
+  qrcode?: string
+  /** 二维码图片地址 */
+  img?: string
 }
 
 /** 分享视频渲染任务 */

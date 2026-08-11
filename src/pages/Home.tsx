@@ -62,11 +62,6 @@ export function Home() {
     tags: r.tags,
   }))
 
-  const playDaily = () => {
-    if (recTracks.length === 0) return
-    playQueue(recTracks.map(toTrack))
-  }
-
   return (
     <div className="page home">
       <header className="home-head">
@@ -117,9 +112,9 @@ export function Home() {
               ))}
             </div>
           </div>
-          <button className="btn btn-play" onClick={playDaily}>
-            <Icon name="play" size={18} />
-            {t('home.playDaily')}
+          <button className="btn btn-play" onClick={() => navigate('/daily')}>
+            <Icon name="list" size={18} />
+            {t('home.viewDaily')}
           </button>
         </section>
       )}

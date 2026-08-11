@@ -4,10 +4,20 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // 挂代理（或用域名/隧道）访问时，Host 头与 localhost 不一致，
+  // Vite 默认会以 403「Blocked request. This host is not allowed」拦截。
+  // 这里放开 Host 白名单，代理环境下才能正常打开本地站点。
+  server: { allowedHosts: true },
+  preview: { allowedHosts: true },
   plugins: [
     react(),
     VitePWA({
+      // 彻底禁用缓存：生成"自毁"Service Worker——已安装过 SW 的客户端拉到它后
+      // 会自动注销自身并清空所有 Cache Storage，之后不再有任何离线缓存。
+      // manifest 仍然生成，"添加到主屏"/standalone 显示不受影响（iOS 不依赖 SW）。
+      selfDestroying: true,
       registerType: 'autoUpdate',
+      injectRegister: null,
       includeAssets: [
         'icons/icon-192.png',
         'icons/icon-512.png',
@@ -37,24 +47,7 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // NetworkFirst（workbox 默认）：正常时永远从网络拿最新 index.html，
-        // 断网/超时才回退本地缓存，保证新构建立即可见
-        navigateFallback: '/index.html',
-        cleanupOutdatedCaches: true,
-        runtimeCaching: [
-          {
-            // 封面图：stale-while-revalidate 提升“添加到主屏”后的加载体验
-            urlPattern: ({ url }) => url.pathname.includes('/api/music/cover/'),
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'neko-covers',
-              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 14 },
-            },
-          },
-        ],
-      },
+      // selfDestroying 模式下不做任何预缓存 / 运行时缓存
     }),
   ],
 })

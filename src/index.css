@@ -32,6 +32,8 @@
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --tabbar-h: 58px;
+  /* iOS 主题悬浮胶囊 TabBar 距屏幕底边的距离（standalone 下另有覆盖） */
+  --tabbar-float-b: calc(var(--sab) + 10px);
   /* 随主题切换的组件背景（白天模式在下方 :root[data-theme='neko-light'] 覆盖） */
   --tabbar-bg: rgba(27, 21, 35, 0.88);
   --mini-bg: rgba(33, 26, 43, 0.95);
@@ -61,6 +63,10 @@
   :root {
     --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
+    /* standalone 没有 URL 栏，屏幕底边就是页面底边：安全区(34px) + 10px 会让
+       悬浮胶囊离底边 44px，视觉上"没贴到最底下"。这里收紧到刚好在
+       Home Indicator 上方，同时保证最小 6px 不贴死。 */
+    --tabbar-float-b: max(calc(env(safe-area-inset-bottom, 0px) - 16px), 6px);
   }
 }
 
@@ -112,6 +118,25 @@ body {
 #root {
   display: flex;
   flex-direction: column;
+}
+
+/* 自定义背景层：固定铺满视口，压在所有 UI 之下（透明度由内联 style 控制） */
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* iOS 上 fixed 背景层不参与滚动，天然稳定 */
+}
+
+/* 有自定义背景时，主容器与固定层保持在其上方 */
+.app-bg ~ .shell,
+.app-bg ~ .full-player {
+  position: relative;
+  z-index: 1;
 }
 
 button {
@@ -2161,6 +2186,220 @@ input[type='number']::-webkit-inner-spin-button {
   text-overflow: ellipsis;
 }
 
+/* ---------------- 歌曲详情页 ---------------- */
+.music-hero {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.music-hero-cover {
+  width: 116px;
+  height: 116px;
+  flex: none;
+}
+
+.music-hero-cover .cover {
+  width: 100%;
+  height: 100%;
+}
+
+.music-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.music-hero-info h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.music-hero-artist {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.music-hero-meta {
+  margin: 5px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+.music-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.music-actions .btn {
+  flex: 1;
+}
+
+/* 次级操作：加队列 / 加歌单 / 下载 / 分享 */
+.music-actions-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.music-act {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 4px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 11.5px;
+  transition: background 0.12s;
+}
+
+.music-act:active {
+  background: var(--surface-2);
+}
+
+.music-act span {
+  text-align: center;
+  line-height: 1.3;
+}
+
+.music-lyrics {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.music-lyric-line {
+  margin: 0;
+  padding: 5px 0;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text-2);
+  text-align: center;
+  /* 双语歌词（原文 + 换行翻译）保持换行 */
+  white-space: pre-line;
+}
+
+/* ---------------- 设置：自定义背景 ---------------- */
+
+.bg-opacity-range {
+  width: 100%;
+}
+
+.bg-preview {
+  height: 120px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.bg-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bg-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.bg-actions .btn {
+  flex: 1;
+}
+
+/* ---------------- 每日推荐歌单页 ---------------- */
+
+.daily-page-sub {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.daily-page-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.daily-page-actions .btn {
+  flex: 1;
+}
+
+/* 多选勾选框（替代封面位） */
+.daily-check {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 12px;
+  border: 1.5px solid var(--line-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.daily-check.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #241a10;
+}
+
+.track-row.is-picked {
+  background: var(--accent-soft);
+}
+
+.daily-reason {
+  max-width: 32%;
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: right;
+}
+
+/* 选择模式底部操作条（贴在 TabBar 上方） */
+.daily-bar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--tabbar-h) + var(--sab) + 12px);
+  z-index: 55;
+  max-width: 536px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: var(--toast-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.daily-bar-count {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
 /* ---------------- 会员中心 ---------------- */
 
 .vip-status {
@@ -2273,6 +2512,21 @@ input[type='number']::-webkit-inner-spin-button {
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
   word-break: break-all;
+}
+
+.vip-pay .btn-lg {
+  width: 100%;
+}
+
+.vip-pay-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.vip-pay .dialog-actions {
+  width: 100%;
 }
 
 /* ---------------- 歌曲信息 ---------------- */
@@ -2851,7 +3105,7 @@ input[type='number']::-webkit-inner-spin-button {
 :root[data-theme^='ios'] .tabbar {
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--sab) + 10px);
+  bottom: var(--tabbar-float-b);
   width: min(calc(100% - 40px), 480px);
   height: 50px;
   padding-bottom: 0;
@@ -2872,7 +3126,7 @@ input[type='number']::-webkit-inner-spin-button {
   left: 50%;
   transform: translateX(-50%);
   width: min(calc(100% - 24px), 520px);
-  bottom: calc(var(--sab) + 68px);
+  bottom: calc(var(--tabbar-float-b) + 58px);
   height: 58px;
   border-radius: 22px;
   background: var(--mini-bg);

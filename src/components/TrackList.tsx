@@ -12,7 +12,6 @@ import { formatDur } from '../utils/format'
 import { Icon } from './Icon'
 import { Cover } from './Cover'
 import { Sheet } from './ui'
-import { MusicInfoSheet } from './MusicInfoSheet'
 import { VideoShareSheet } from './VideoShareSheet'
 
 // ---------- 播放中均衡器 ----------
@@ -163,7 +162,6 @@ export function TrackActionSheets() {
   const addToQueue = usePlayer((s) => s.addToQueue)
   const favIds = useFavorites((s) => s.ids)
   const toggleFav = useFavorites((s) => s.toggle)
-  const [infoTrack, setInfoTrack] = useState<Track | null>(null)
   const [shareTrack, setShareTrack] = useState<Track | null>(null)
 
   const track = trackActions?.track
@@ -249,7 +247,7 @@ export function TrackActionSheets() {
       icon: 'info',
       onClick: () => {
         close()
-        setInfoTrack(track)
+        navigate(`/music/${track.id}`)
       },
     },
     {
@@ -281,7 +279,6 @@ export function TrackActionSheets() {
           ))}
         </div>
       </Sheet>
-      {infoTrack && <MusicInfoSheet track={infoTrack} onClose={() => setInfoTrack(null)} />}
       {shareTrack && <VideoShareSheet track={shareTrack} onClose={() => setShareTrack(null)} />}
     </>
   )

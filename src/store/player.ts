@@ -40,6 +40,17 @@ function getAudio(): HTMLAudioElement {
     audio.preload = 'auto'
     audio.setAttribute('playsinline', '')
     audio.setAttribute('webkit-playsinline', '')
+    // iOS（尤其 standalone PWA）：游离于 DOM 之外的 Audio 对象在切到后台时
+    // 会被连同页面一起冻结，导致音乐中断。挂进文档能让 WebKit 按"媒体元素"
+    // 对待它，配合 MediaSession 才能后台继续播放。
+    // 注意：不要设置 crossorigin，否则音频改走 CORS 模式，一旦响应缺少
+    // Access-Control-Allow-Origin 就完全无法播放。
+    audio.style.display = 'none'
+    if (typeof document !== 'undefined') {
+      const mount = () => document.body?.appendChild(audio!)
+      if (document.body) mount()
+      else document.addEventListener('DOMContentLoaded', mount, { once: true })
+    }
   }
   return audio
 }
@@ -77,8 +88,16 @@ function pickNext(queue: Track[], mode: PlayMode, current: number, forward: bool
 function setupMediaSession(usePlayer: () => PlayerState) {
   if (!('mediaSession' in navigator)) return
   const ms = navigator.mediaSession
-  ms.setActionHandler('play', () => usePlayer().toggle())
-  ms.setActionHandler('pause', () => usePlayer().toggle())
+  // 用明确的 play/pause 而非 toggle：锁屏/控制中心发来的指令语义是确定的，
+  // 用 toggle 在状态不同步时会把"播放"当成"暂停"，表现为后台无法恢复播放。
+  ms.setActionHandler('play', () => {
+    const s = usePlayer()
+    if (!s.playing) s.toggle()
+  })
+  ms.setActionHandler('pause', () => {
+    const s = usePlayer()
+    if (s.playing) s.toggle()
+  })
   ms.setActionHandler('previoustrack', () => usePlayer().prev())
   ms.setActionHandler('nexttrack', () => usePlayer().next())
   try {
@@ -87,6 +106,24 @@ function setupMediaSession(usePlayer: () => PlayerState) {
     })
   } catch {
     // 个别平台不支持 seekto
+  }
+}
+
+/** 同步锁屏/控制中心的播放状态与进度条（iOS 后台控制依赖它） */
+function syncMediaState(el: HTMLAudioElement, playing: boolean) {
+  if (!('mediaSession' in navigator)) return
+  const ms = navigator.mediaSession
+  ms.playbackState = playing ? 'playing' : 'paused'
+  try {
+    if (Number.isFinite(el.duration) && el.duration > 0) {
+      ms.setPositionState?.({
+        duration: el.duration,
+        playbackRate: el.playbackRate || 1,
+        position: Math.min(el.currentTime, el.duration),
+      })
+    }
+  } catch {
+    // 个别平台不支持 setPositionState
   }
 }
 
@@ -137,12 +174,19 @@ export const usePlayer = create<PlayerState>((set, get) => {
   el.addEventListener('timeupdate', () => set({ currentTime: el.currentTime }))
   el.addEventListener('loadedmetadata', () => {
     if (Number.isFinite(el.duration) && el.duration > 0) set({ duration: el.duration })
+    syncMediaState(el, get().playing)
   })
   el.addEventListener('durationchange', () => {
     if (Number.isFinite(el.duration) && el.duration > 0) set({ duration: el.duration })
   })
-  el.addEventListener('playing', () => set({ playing: true, loading: false }))
-  el.addEventListener('pause', () => set({ playing: false, loading: false }))
+  el.addEventListener('playing', () => {
+    set({ playing: true, loading: false })
+    syncMediaState(el, true)
+  })
+  el.addEventListener('pause', () => {
+    set({ playing: false, loading: false })
+    syncMediaState(el, false)
+  })
   el.addEventListener('waiting', () => set({ loading: true }))
   el.addEventListener('error', () => {
     set({ playing: false, loading: false })
@@ -260,6 +304,7 @@ export const usePlayer = create<PlayerState>((set, get) => {
       if (Number.isFinite(t)) {
         el.currentTime = t
         set({ currentTime: t })
+        syncMediaState(el, get().playing)
       }
     },
 

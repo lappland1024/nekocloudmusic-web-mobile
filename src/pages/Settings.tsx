@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { changePassword } from '../api'
 import { useAuth } from '../store/auth'
 import { useTheme } from '../store/theme'
+import { useAppearance } from '../store/appearance'
 import { useToast } from '../store/ui'
 import { useLang, useT } from '../i18n'
 import { Icon } from '../components/Icon'
@@ -23,11 +24,32 @@ export function Settings() {
   const setMode = useTheme((s) => s.setMode)
   const toast = useToast((s) => s.toast)
   const token = useAuth((s) => s.token)
+  const bgUrl = useAppearance((s) => s.bgUrl)
+  const bgOpacity = useAppearance((s) => s.bgOpacity)
+  const setBgUrl = useAppearance((s) => s.setBgUrl)
+  const setBgOpacity = useAppearance((s) => s.setBgOpacity)
+  const clearBg = useAppearance((s) => s.clearBg)
 
+  const [bgInput, setBgInput] = useState(bgUrl)
   const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   const [busy, setBusy] = useState(false)
+
+  const applyBg = () => {
+    const u = bgInput.trim()
+    if (!u) {
+      clearBg()
+      toast('appearance.cleared', 'success')
+      return
+    }
+    if (!/^https?:\/\//i.test(u)) {
+      toast('appearance.invalidUrl', 'info')
+      return
+    }
+    setBgUrl(u)
+    toast('appearance.applied', 'success')
+  }
 
   const submit = async () => {
     if (newPassword.length < 6) {
@@ -139,6 +161,74 @@ export function Settings() {
           >
             {t('settings.modeSystem')}
           </button>
+        </div>
+      </section>
+
+      <section className="list-section">
+        <h3 className="list-section-title">{t('appearance.title')}</h3>
+        <div className="form">
+          <label className="field">
+            <span>{t('appearance.bgUrl')}</span>
+            <input
+              className="input"
+              type="url"
+              inputMode="url"
+              value={bgInput}
+              onChange={(e) => setBgInput(e.target.value)}
+              placeholder={t('appearance.bgUrlPlaceholder')}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </label>
+          <p className="settings-lang-hint">{t('appearance.bgUrlHint')}</p>
+
+          <label className="field">
+            <span>
+              {t('appearance.opacity')} · {Math.round(bgOpacity * 100)}%
+            </span>
+            <input
+              type="range"
+              className="range bg-opacity-range"
+              min={0}
+              max={100}
+              step={1}
+              value={Math.round(bgOpacity * 100)}
+              onChange={(e) => setBgOpacity(Number(e.target.value) / 100)}
+              style={{
+                background: `linear-gradient(to right, var(--accent) ${Math.round(bgOpacity * 100)}%, var(--range-track) ${Math.round(bgOpacity * 100)}%)`,
+              }}
+              aria-label={t('appearance.opacity')}
+            />
+          </label>
+
+          {bgInput.trim() && /^https?:\/\//i.test(bgInput.trim()) && (
+            <div className="bg-preview">
+              <img
+                src={bgInput.trim()}
+                alt={t('appearance.preview')}
+                style={{ opacity: bgOpacity }}
+                onError={(e) => ((e.target as HTMLImageElement).style.visibility = 'hidden')}
+                onLoad={(e) => ((e.target as HTMLImageElement).style.visibility = '')}
+              />
+            </div>
+          )}
+
+          <div className="bg-actions">
+            <button className="btn btn-primary" onClick={applyBg}>
+              {t('appearance.apply')}
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setBgInput('')
+                clearBg()
+                toast('appearance.cleared', 'success')
+              }}
+              disabled={!bgUrl && !bgInput}
+            >
+              {t('appearance.clear')}
+            </button>
+          </div>
         </div>
       </section>
 

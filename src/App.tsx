@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router-dom'
 import { useFavorites } from './store/favorites'
 import { useAuth } from './store/auth'
+import { useAppearance } from './store/appearance'
 import { resolveTheme, resolveMode, useTheme } from './store/theme'
 import { MiniPlayer } from './components/MiniPlayer'
 import { FullPlayer } from './components/FullPlayer'
@@ -15,6 +16,8 @@ import { MyPlaylists } from './pages/MyPlaylists'
 import { Favorites } from './pages/Favorites'
 import { Uploads } from './pages/Uploads'
 import { Artist } from './pages/Artist'
+import { MusicDetail } from './pages/MusicDetail'
+import { DailyRecs } from './pages/DailyRecs'
 import { Me } from './pages/Me'
 import { Vip } from './pages/Vip'
 import { Settings } from './pages/Settings'
@@ -72,6 +75,8 @@ function AnimatedRoutes() {
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/uploads" element={<Uploads />} />
         <Route path="/artist/:name" element={<Artist />} />
+        <Route path="/music/:id" element={<MusicDetail />} />
+        <Route path="/daily" element={<DailyRecs />} />
         <Route path="/me" element={<Me />} />
         <Route path="/vip" element={<Vip />} />
         <Route path="/settings" element={<Settings />} />
@@ -87,6 +92,8 @@ export default function App() {
   const ensureFavs = useFavorites((s) => s.ensureLoaded)
   const style = useTheme((s) => s.style)
   const mode = useTheme((s) => s.mode)
+  const bgUrl = useAppearance((s) => s.bgUrl)
+  const bgOpacity = useAppearance((s) => s.bgOpacity)
 
   useEffect(() => {
     if (token) ensureFavs()
@@ -147,6 +154,18 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      {/* 自定义背景（外部图片 URL + 透明度）：固定铺满视口，位于所有内容之下 */}
+      {bgUrl && (
+        <div
+          className="app-bg"
+          aria-hidden="true"
+          style={{
+            // 引号包裹 + 转义双引号，避免 URL 里的特殊字符破坏 url() 语法
+            backgroundImage: `url("${bgUrl.replace(/"/g, '%22')}")`,
+            opacity: bgOpacity,
+          }}
+        />
+      )}
       {/* shell：手机时退化为块级（TabBar 仍是 fixed 底部）；平板时变为"左栏 + 内容区"两栏 */}
       <div className="shell">
         <TabBar />

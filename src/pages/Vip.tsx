@@ -77,8 +77,13 @@ export function Vip() {
     }
   }
 
-  // 后端返回的 qrcode/payurl 可能是完整 URL 也可能是相对路径
+  // 后端返回的 img/payurl 可能是完整 URL 也可能是相对路径
   const abs = (u: string) => (/^https?:/i.test(u) ? u : apiUrl(u))
+
+  // 复制用的支付链接：qrcode 与 payurl 同为支付链接，优先 payurl
+  const payLink = order ? (order.payurl || order.qrcode || '') : ''
+  // 在浏览器中打开：移动端优先 H5 收银台（payurl2）
+  const openLink = order ? (order.payurl2 || order.payurl || order.qrcode || '') : ''
 
   return (
     <div className="page">
@@ -163,26 +168,39 @@ export function Vip() {
         </>
       )}
 
-      {/* 支付面板（二维码 + 收银台链接） */}
+      {/* 支付面板：img 才是二维码图片；qrcode / payurl 都是支付链接 */}
       {order && (
         <div className="overlay overlay-center" onClick={() => setOrder(null)}>
           <div className="dialog vip-pay" onClick={(e) => e.stopPropagation()}>
             <div className="dialog-title">{t('vip.payTitle')}</div>
-            <img
-              className="vip-qrcode"
-              src={abs(order.qrcode)}
-              alt=""
-              onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
-            />
+
+            {order.img ? (
+              <>
+                <img
+                  className="vip-qrcode"
+                  src={abs(order.img)}
+                  alt=""
+                  onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
+                />
+                <p className="vip-pay-hint">{t('vip.qrHint')}</p>
+              </>
+            ) : null}
+
             <p className="vip-order-no">{t('vip.orderNo', { no: order.outTradeNo })}</p>
-            <a className="link-btn" href={abs(order.payurl)} target="_blank" rel="noopener noreferrer">
+
+            {/* 复制支付链接：微信支付需在微信 App 内打开，与"浏览器打开"分开 */}
+            <button className="btn btn-ghost btn-lg" onClick={() => copy(payLink)}>
+              <Icon name="share" size={18} />
+              {t('vip.copyLink')}
+            </button>
+            <p className="vip-pay-hint">{t('vip.copyHint')}</p>
+
+            <a className="btn btn-ghost btn-lg" href={abs(openLink)} target="_blank" rel="noopener noreferrer">
+              <Icon name="arrowRight" size={18} />
               {t('vip.payUrlHint')}
-              <Icon name="arrowRight" size={16} />
             </a>
+
             <div className="dialog-actions">
-              <button className="btn btn-ghost" onClick={() => copy(order.payurl)}>
-                {t('common.copy')}
-              </button>
               <button className="btn btn-primary" onClick={() => setOrder(null)}>
                 {t('common.done')}
               </button>
