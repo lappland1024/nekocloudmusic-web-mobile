@@ -92,6 +92,7 @@ export default function App() {
   const ensureFavs = useFavorites((s) => s.ensureLoaded)
   const style = useTheme((s) => s.style)
   const mode = useTheme((s) => s.mode)
+  const glassOpacity = useTheme((s) => s.glassOpacity)
   const bgUrl = useAppearance((s) => s.bgUrl)
   const bgOpacity = useAppearance((s) => s.bgOpacity)
 
@@ -105,6 +106,8 @@ export default function App() {
     const apply = () => {
       const m = resolveMode(mode)
       document.documentElement.dataset.theme = resolveTheme(style, mode)
+      // 液态玻璃表面不透明度 -> CSS 变量（--glass-alpha）
+      document.documentElement.style.setProperty('--glass-alpha', glassOpacity.toFixed(2))
       const metaColor =
         style === 'ios'
           ? (m === 'dark' ? '#000000' : '#f2f2f7')
@@ -118,7 +121,7 @@ export default function App() {
     apply()
     mq.addEventListener('change', apply)
     return () => mq.removeEventListener('change', apply)
-  }, [style, mode])
+  }, [style, mode, glassOpacity])
 
   useEffect(() => {
     // iOS 旋转屏幕 / 尺寸变化后，fixed 元素（全屏播放器等）偶发"渲染偏移"：

@@ -9,8 +9,11 @@ export type ThemeMode = 'light' | 'dark' | 'system'
 interface ThemeState {
   style: ThemeStyle
   mode: ThemeMode
+  /** 液态玻璃（iOS 主题）表面不透明度 0–1，越低越透明 */
+  glassOpacity: number
   setStyle: (s: ThemeStyle) => void
   setMode: (m: ThemeMode) => void
+  setGlassOpacity: (v: number) => void
 }
 
 /** 解析 system 模式为实际深浅 */
@@ -29,8 +32,11 @@ export const useTheme = create<ThemeState>()(
     (set) => ({
       style: 'ios',
       mode: 'system',
+      glassOpacity: 0.72,
       setStyle: (style) => set({ style }),
       setMode: (mode) => set({ mode }),
+      setGlassOpacity: (glassOpacity) =>
+        set({ glassOpacity: Math.min(Math.max(glassOpacity, 0.2), 1) }),
     }),
     {
       name: 'neko-theme',
@@ -40,21 +46,26 @@ export const useTheme = create<ThemeState>()(
       // 为稳妥仍兼容带包装的形态。
       merge: (persisted, current) => {
         const p = persisted as
-          | { state?: { theme?: string; style?: ThemeStyle; mode?: ThemeMode }; theme?: string; style?: ThemeStyle; mode?: ThemeMode }
+          | { state?: { theme?: string; style?: ThemeStyle; mode?: ThemeMode; glassOpacity?: number }; theme?: string; style?: ThemeStyle; mode?: ThemeMode; glassOpacity?: number }
           | undefined
         const s = p?.state ?? p
         const old = s?.theme
+        // 旧格式迁移：使用默认玻璃透明度，避免 undefined
+        const glassOpacity =
+          typeof s?.glassOpacity === 'number' ? s.glassOpacity : current.glassOpacity
         if (old === 'dark' || old === 'light' || old === 'ios') {
           return {
             ...current,
             style: old === 'ios' ? 'ios' : 'neko',
             mode: old === 'ios' ? 'system' : old,
+            glassOpacity,
           }
         }
         return {
           ...current,
           style: (s?.style as ThemeStyle | undefined) ?? current.style,
           mode: (s?.mode as ThemeMode | undefined) ?? current.mode,
+          glassOpacity,
         }
       },
     },

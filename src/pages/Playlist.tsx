@@ -37,10 +37,16 @@ export function Playlist() {
   const [fav, setFav] = useState(false)
   const [manage, setManage] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [badId, setBadId] = useState(false)
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
 
   useEffect(() => {
+    // 非法 id（手改 URL）直接报错，避免 Promise 永远 pending 卡骨架屏
+    if (!Number.isFinite(pid)) {
+      setBadId(true)
+      return
+    }
     let alive = true
     setDetail(null)
     setMusic(null)
@@ -126,6 +132,15 @@ export function Playlist() {
   }
 
   const loading = !detail || !music
+
+  if (badId) {
+    return (
+      <div className="page playlist-page">
+        <PageHead onBack={() => navigate(-1)} title={t('playlist.my')} />
+        <EmptyState text={t('common.error')} sub={t('common.retryLater')} />
+      </div>
+    )
+  }
 
   return (
     <div className="page playlist-page">

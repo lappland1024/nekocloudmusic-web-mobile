@@ -22,6 +22,8 @@ export function Settings() {
   const setStyle = useTheme((s) => s.setStyle)
   const mode = useTheme((s) => s.mode)
   const setMode = useTheme((s) => s.setMode)
+  const glassOpacity = useTheme((s) => s.glassOpacity)
+  const setGlassOpacity = useTheme((s) => s.setGlassOpacity)
   const toast = useToast((s) => s.toast)
   const token = useAuth((s) => s.token)
   const bgUrl = useAppearance((s) => s.bgUrl)
@@ -138,6 +140,29 @@ export function Settings() {
             {t('settings.styleApple')}
           </button>
         </div>
+        {style === 'ios' && (
+          <div className="form glass-opacity-block">
+            <label className="field">
+              <span>
+                {t('settings.glassOpacity')} · {Math.round(glassOpacity * 100)}%
+              </span>
+              <input
+                type="range"
+                className="range"
+                min={20}
+                max={100}
+                step={1}
+                value={Math.round(glassOpacity * 100)}
+                onChange={(e) => setGlassOpacity(Number(e.target.value) / 100)}
+                style={{
+                  background: `linear-gradient(to right, var(--accent) ${Math.round(glassOpacity * 100)}%, var(--range-track) ${Math.round(glassOpacity * 100)}%)`,
+                }}
+                aria-label={t('settings.glassOpacity')}
+              />
+            </label>
+            <p className="settings-lang-hint">{t('settings.glassOpacityHint')}</p>
+          </div>
+        )}
       </section>
 
       <section className="list-section">

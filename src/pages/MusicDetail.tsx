@@ -117,13 +117,17 @@ export function MusicDetail() {
             </div>
             <div className="music-hero-info">
               <h2 className="truncate2">{info.title}</h2>
-              <button
-                className="music-hero-artist truncate"
-                onClick={() => navigate(`/artist/${encodeURIComponent(info.artist)}`)}
-              >
-                {info.artist || t('common.unknown')}
-                <Icon name="chevronRight" size={14} />
-              </button>
+              {info.artist ? (
+                <button
+                  className="music-hero-artist truncate"
+                  onClick={() => navigate(`/artist/${encodeURIComponent(info.artist)}`)}
+                >
+                  {info.artist}
+                  <Icon name="chevronRight" size={14} />
+                </button>
+              ) : (
+                <span className="music-hero-artist truncate">{t('common.unknown')}</span>
+              )}
               <p className="music-hero-meta truncate">
                 {info.album || t('common.unknown')}
                 {info.duration > 0 ? ` · ${formatDur(info.duration)}` : ''}

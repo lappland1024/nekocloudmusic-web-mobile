@@ -120,7 +120,11 @@ body {
   flex-direction: column;
 }
 
-/* 自定义背景层：固定铺满视口，压在所有 UI 之下（透明度由内联 style 控制） */
+/* 自定义背景层：固定铺满视口，压在所有 UI 之下（透明度由内联 style 控制）。
+   注意：绝不要用 `.app-bg ~ X` 这类兄弟选择器给同级元素改 position——
+   .full-player/.tabbar/.mini-player/.overlay 都是 fixed 且 z-index > 0，
+   本来就在本层之上；一旦被改成 relative 就会掉回文档流，
+   把 .shell 挤扁（表现为"页面划不动、播放器弹不出来"）。 */
 .app-bg {
   position: fixed;
   inset: 0;
@@ -129,14 +133,6 @@ body {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  /* iOS 上 fixed 背景层不参与滚动，天然稳定 */
-}
-
-/* 有自定义背景时，主容器与固定层保持在其上方 */
-.app-bg ~ .shell,
-.app-bg ~ .full-player {
-  position: relative;
-  z-index: 1;
 }
 
 button {
@@ -3045,8 +3041,9 @@ input[type='number']::-webkit-inner-spin-button {
   --range-track: rgba(120, 120, 128, 0.32);
   --overlay-bg: rgba(0, 0, 0, 0.35);
   --toast-bg: rgba(120, 120, 128, 0.35);
-  --tabbar-bg: rgba(255, 255, 255, 0.72); /* regular 材质近似 */
-  --mini-bg: rgba(255, 255, 255, 0.72);
+  /* 液态玻璃表面：透明度由 --glass-alpha 控制（设置里可调，默认 0.72） */
+  --tabbar-bg: rgba(255, 255, 255, var(--glass-alpha, 0.72)); /* regular 材质近似 */
+  --mini-bg: rgba(255, 255, 255, var(--glass-alpha, 0.72));
   --tabbar-h: 70px; /* 悬浮胶囊占用高度，驱动 .page 底部留白 */
 
   --fp-bg: radial-gradient(120% 80% at 50% 0%, #f9f9fd 0%, #f2f2f7 55%, #e9e9f0 100%);
@@ -3087,8 +3084,8 @@ input[type='number']::-webkit-inner-spin-button {
     --range-track: rgba(120, 120, 128, 0.5);
     --overlay-bg: rgba(0, 0, 0, 0.5);
     --toast-bg: rgba(44, 44, 46, 0.72);
-    --tabbar-bg: rgba(28, 28, 30, 0.72);
-    --mini-bg: rgba(28, 28, 30, 0.72);
+    --tabbar-bg: rgba(28, 28, 30, var(--glass-alpha, 0.72));
+    --mini-bg: rgba(28, 28, 30, var(--glass-alpha, 0.72));
 
     --fp-bg: radial-gradient(120% 80% at 50% 0%, #1f1f22 0%, #131316 55%, #050507 100%);
 
@@ -3812,6 +3809,10 @@ input[type='number']::-webkit-inner-spin-button {
 .shell {
   display: flex;
   height: 100%;
+  /* 抬到 .app-bg（fixed, z-index:0）之上。只加定位不改盒模型，
+     不影响内部 fixed 子元素（TabBar/MiniPlayer）的定位基准（仍是视口）。 */
+  position: relative;
+  z-index: 1;
 }
 
 .content {
