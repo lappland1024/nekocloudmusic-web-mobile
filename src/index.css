@@ -32,6 +32,8 @@
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --tabbar-h: 58px;
+  /* 底栏自身让出的安全区：默认等于 --sab；standalone 下会压低，避免 PWA 里底栏高得离谱 */
+  --tabbar-pad-b: var(--sab);
   /* iOS 主题悬浮胶囊 TabBar 距屏幕底边的距离（standalone 下另有覆盖） */
   --tabbar-float-b: calc(var(--sab) + 10px);
   /* 随主题切换的组件背景（白天模式在下方 :root[data-theme='neko-light'] 覆盖） */
@@ -63,9 +65,10 @@
   :root {
     --sat: env(safe-area-inset-top, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
-    /* standalone 没有 URL 栏，屏幕底边就是页面底边：安全区(34px) + 10px 会让
-       悬浮胶囊离底边 44px，视觉上"没贴到最底下"。这里收紧到刚好在
-       Home Indicator 上方，同时保证最小 6px 不贴死。 */
+    /* 普通/Apple 贴底底栏：不要把完整 34px Home Indicator 安全区全塞进底栏高度，
+       否则 PWA 里底栏会被垫得很高。压到视觉上刚好贴底。 */
+    --tabbar-pad-b: max(calc(env(safe-area-inset-bottom, 0px) - 16px), 0px);
+    /* iOS 液态玻璃悬浮胶囊：同理往底部收紧，但保留 6px 最小间距。 */
     --tabbar-float-b: max(calc(env(safe-area-inset-bottom, 0px) - 16px), 6px);
   }
 }
@@ -220,6 +223,15 @@ body.body-locked .page {
   overflow: hidden;
 }
 
+/* 自定义背景启用时：顶部吸顶栏不再铺实色底（--bg），
+   否则深色模式下背景图上方会压着一整条黑边，非常难看。
+   三个吸顶容器（首页头 / 通用页头 / 搜索栏）统一改透明。 */
+:root[data-custom-bg='1'] .home-head,
+:root[data-custom-bg='1'] .page-head,
+:root[data-custom-bg='1'] .search-bar-wrap {
+  background: transparent;
+}
+
 .page-head {
   display: flex;
   align-items: center;
@@ -266,8 +278,8 @@ body.body-locked .page {
   right: 0;
   bottom: 0;
   z-index: 60;
-  height: calc(var(--tabbar-h) + var(--sab));
-  padding-bottom: var(--sab);
+  height: calc(var(--tabbar-h) + var(--tabbar-pad-b));
+  padding-bottom: var(--tabbar-pad-b);
   display: flex;
   background: var(--tabbar-bg);
   backdrop-filter: blur(18px);
@@ -992,7 +1004,7 @@ input[type='number']::-webkit-inner-spin-button {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--tabbar-h) + var(--sab));
+  bottom: calc(var(--tabbar-h) + var(--tabbar-pad-b));
   z-index: 55;
   max-width: 560px;
   margin: 0 auto;
@@ -1167,10 +1179,12 @@ input[type='number']::-webkit-inner-spin-button {
   padding: 0 22px calc(18px + var(--sab));
 }
 
-/* 收藏按钮（进度条上方）：手机版放底部栏，平板版放封面列 */
+/* 收藏+下载按钮行（进度条上方）：手机版放底部栏，平板版放封面列 */
 .fp-fav-row {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 34px;
   margin-bottom: 14px;
 }
 
@@ -2372,7 +2386,7 @@ input[type='number']::-webkit-inner-spin-button {
   position: fixed;
   left: 12px;
   right: 12px;
-  bottom: calc(var(--tabbar-h) + var(--sab) + 12px);
+  bottom: calc(var(--tabbar-h) + var(--tabbar-pad-b) + 12px);
   z-index: 55;
   max-width: 536px;
   margin: 0 auto;
@@ -3594,8 +3608,8 @@ input[type='number']::-webkit-inner-spin-button {
   bottom: 0;
   width: 100%;
   max-width: 560px;
-  height: calc(var(--tabbar-h) + var(--sab));
-  padding-bottom: var(--sab);
+  height: calc(var(--tabbar-h) + var(--tabbar-pad-b));
+  padding-bottom: var(--tabbar-pad-b);
   border-radius: 0;
   background: var(--tabbar-bg);
   backdrop-filter: blur(20px) saturate(1.5);
@@ -3615,7 +3629,7 @@ input[type='number']::-webkit-inner-spin-button {
   transform: none;
   width: 100%;
   max-width: 560px;
-  bottom: calc(var(--tabbar-h) + var(--sab));
+  bottom: calc(var(--tabbar-h) + var(--tabbar-pad-b));
   border-radius: 0;
   background: var(--mini-bg);
   backdrop-filter: blur(20px) saturate(1.5);
@@ -4185,10 +4199,10 @@ input[type='number']::-webkit-inner-spin-button {
   min-width: 0;
 }
 
-/* 手机版封面列只展示封面：进度条/控制/收藏都放底部栏 */
+/* 手机版封面列只展示封面：进度条/控制/收藏下载行都放底部栏 */
 .fp-cover-col .fp-progress,
 .fp-cover-col .fp-controls,
-.fp-cover-col .fp-fav {
+.fp-cover-col .fp-fav-row {
   display: none;
 }
 
@@ -4235,17 +4249,17 @@ input[type='number']::-webkit-inner-spin-button {
 
   /* 进度条与控制移到封面列下方 */
   .fp-cover-col .fp-progress,
-  .fp-cover-col .fp-controls,
-  .fp-cover-col .fp-fav {
+  .fp-cover-col .fp-controls {
     display: flex;
     width: 100%;
     max-width: 380px;
   }
 
-  .fp-cover-col .fp-fav {
-    width: auto;
-    max-width: none;
+  .fp-cover-col .fp-fav-row {
+    display: flex;
     justify-content: center;
+    width: 100%;
+    max-width: 380px;
   }
 
   .fp-lyrics-col {

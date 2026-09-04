@@ -36,7 +36,7 @@ export const useTheme = create<ThemeState>()(
       setStyle: (style) => set({ style }),
       setMode: (mode) => set({ mode }),
       setGlassOpacity: (glassOpacity) =>
-        set({ glassOpacity: Math.min(Math.max(glassOpacity, 0.2), 1) }),
+        set({ glassOpacity: Math.min(Math.max(glassOpacity, 0), 1) }),
     }),
     {
       name: 'neko-theme',

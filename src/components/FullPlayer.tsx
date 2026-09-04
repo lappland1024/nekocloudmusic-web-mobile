@@ -9,6 +9,7 @@ import { Icon } from './Icon'
 import { Cover } from './Cover'
 import { Sheet, EmptyState } from './ui'
 import { useBodyLock } from '../hooks/useBodyLock'
+import { useToast } from '../store/ui'
 import { formatDur } from '../utils/format'
 
 const lyricCache = new Map<number, LrcLine[]>()
@@ -58,6 +59,26 @@ function FpFavButton() {
       aria-label={t('fav.like')}
     >
       <Icon name={isFav ? 'heartFill' : 'heart'} size={22} />
+    </button>
+  )
+}
+
+/** 下载按钮：与收藏齐平（进度条上方一行），直接打开音频 API 地址新页面 */
+function FpDownloadButton() {
+  const track = usePlayer((s) => s.queue[s.index])
+  const t = useT()
+  const download = () => {
+    if (!track) return
+    // iOS Safari 对 blob 下载不可靠，改为直接打开音频 API 地址新页面
+    const a = document.createElement('a')
+    a.href = apiUrl(`/api/music/file/${track.id}`)
+    a.target = '_blank'
+    a.rel = 'noopener'
+    a.click()
+  }
+  return (
+    <button className="icon-btn" onClick={download} aria-label={t('player.download')}>
+      <Icon name="download" size={20} />
     </button>
   )
 }
@@ -128,6 +149,7 @@ export function FullPlayer() {
   const removeFromQueue = usePlayer((s) => s.removeFromQueue)
   const clearQueue = usePlayer((s) => s.clearQueue)
   const seek = usePlayer((s) => s.seek)
+  const toast = useToast((s) => s.toast)
 
   const [lyrics, setLyrics] = useState<LrcLine[]>([])
   const lyricBoxRef = useRef<HTMLDivElement>(null)
@@ -156,14 +178,15 @@ export function FullPlayer() {
 
   const activeLine = currentLine(lyrics, currentTime)
 
-  /** 下载当前歌曲：iOS Safari 对 blob 下载不可靠（会吞文件），改为直接打开音频 API 地址新页面 */
-  const download = () => {
+  /** 分享：复制当前歌曲详情页链接（/music/:id） */
+  const share = async () => {
     if (!track) return
-    const a = document.createElement('a')
-    a.href = apiUrl(`/api/music/file/${track.id}`)
-    a.target = '_blank'
-    a.rel = 'noopener'
-    a.click()
+    try {
+      await navigator.clipboard.writeText(`${location.origin}/music/${track.id}`)
+      toast('common.linkCopied', 'success')
+    } catch {
+      toast('common.retryLater', 'info')
+    }
   }
 
   /** 手机竖屏：轻点封面/歌词区域切换视图（网易云式）；平板（≥768px）并排分栏不切换 */
@@ -210,8 +233,8 @@ export function FullPlayer() {
             <span className="fp-artist truncate">{track.artist || t('common.unknown')}</span>
           </div>
         )}
-        <button className="icon-btn" onClick={download} aria-label={t('player.download')}>
-          <Icon name="download" size={20} />
+        <button className="icon-btn" onClick={share} aria-label={t('common.share')}>
+          <Icon name="share" size={20} />
         </button>
       </div>
 
@@ -226,7 +249,10 @@ export function FullPlayer() {
                   {loading && <div className="fp-cover-loading" />}
                 </div>
               </div>
-              <FpFavButton />
+              <div className="fp-fav-row">
+                <FpFavButton />
+                <FpDownloadButton />
+              </div>
               <PlayerProgress />
               <PlayerControls />
             </div>
@@ -262,10 +288,11 @@ export function FullPlayer() {
             </div>
           </div>
 
-          {/* 底部栏（手机版）：收藏 + 进度条 + 控制；封面/歌词视图靠轻点切换 */}
+          {/* 底部栏（手机版）：收藏+下载 / 进度条 / 控制；封面/歌词视图靠轻点切换 */}
           <div className="fp-foot">
             <div className="fp-fav-row">
               <FpFavButton />
+              <FpDownloadButton />
             </div>
 
             <PlayerProgress />

@@ -124,6 +124,12 @@ export default function App() {
   }, [style, mode, glassOpacity])
 
   useEffect(() => {
+    // 有外部背景时，顶部栏不再铺实色底，避免深色模式出现一整条黑边
+    if (bgUrl) document.documentElement.dataset.customBg = '1'
+    else delete document.documentElement.dataset.customBg
+  }, [bgUrl])
+
+  useEffect(() => {
     // iOS 旋转屏幕 / 尺寸变化后，fixed 元素（全屏播放器等）偶发"渲染偏移"：
     // 布局位置正常但内容被渲染到视口外（头部上移、点不到收起/收藏）。
     // 除强制 reflow 外，再对 fixed 全屏层做一次合成层重置

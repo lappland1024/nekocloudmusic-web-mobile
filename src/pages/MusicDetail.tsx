@@ -165,20 +165,15 @@ export function MusicDetail() {
             <button
               className="music-act"
               onClick={() => {
-                if (navigator.share) {
-                  navigator
-                    .share({ title: info.title, text: `${info.title} - ${info.artist}`, url: location.href })
-                    .catch(() => {})
-                } else {
-                  navigator.clipboard
-                    .writeText(location.href)
-                    .then(() => toast('video.copyDone', 'success'))
-                    .catch(() => toast('common.retryLater', 'info'))
-                }
+                // 分享 = 复制本页链接（/music/:id），不调系统分享面板
+                navigator.clipboard
+                  .writeText(location.href)
+                  .then(() => toast('common.linkCopied', 'success'))
+                  .catch(() => toast('common.retryLater', 'info'))
               }}
             >
               <Icon name="share" size={20} />
-              <span>{t('common.share')}</span>
+              <span>{t('common.copyLink')}</span>
             </button>
           </div>
 

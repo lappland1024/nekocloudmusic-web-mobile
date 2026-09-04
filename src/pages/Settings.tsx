@@ -149,7 +149,7 @@ export function Settings() {
               <input
                 type="range"
                 className="range"
-                min={20}
+                min={0}
                 max={100}
                 step={1}
                 value={Math.round(glassOpacity * 100)}
