@@ -90,6 +90,7 @@ function FpShareButton() {
   const toast = useToast((s) => s.toast)
   const share = async () => {
     if (!track) return
+    try {
       await navigator.clipboard.writeText(`${location.origin}/music/${track.id}`)
       toast('common.linkCopied', 'success')
     } catch {
