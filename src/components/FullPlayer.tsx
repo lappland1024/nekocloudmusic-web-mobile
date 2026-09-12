@@ -63,7 +63,7 @@ function FpFavButton() {
   )
 }
 
-/** 下载按钮：与收藏齐平（进度条上方一行），直接打开音频 API 地址新页面 */
+/** 下载按钮：与收藏/分享齐平（进度条上方一行），直接打开音频 API 地址新页面 */
 function FpDownloadButton() {
   const track = usePlayer((s) => s.queue[s.index])
   const t = useT()
@@ -79,6 +79,26 @@ function FpDownloadButton() {
   return (
     <button className="icon-btn" onClick={download} aria-label={t('player.download')}>
       <Icon name="download" size={20} />
+    </button>
+  )
+}
+
+/** 分享按钮：复制当前歌曲详情页链接，与收藏/下载齐平 */
+function FpShareButton() {
+  const track = usePlayer((s) => s.queue[s.index])
+  const t = useT()
+  const toast = useToast((s) => s.toast)
+  const share = async () => {
+    if (!track) return
+      await navigator.clipboard.writeText(`${location.origin}/music/${track.id}`)
+      toast('common.linkCopied', 'success')
+    } catch {
+      toast('common.retryLater', 'info')
+    }
+  }
+  return (
+    <button className="icon-btn" onClick={share} aria-label={t('common.copyLink')}>
+      <Icon name="share" size={20} />
     </button>
   )
 }
@@ -149,7 +169,7 @@ export function FullPlayer() {
   const removeFromQueue = usePlayer((s) => s.removeFromQueue)
   const clearQueue = usePlayer((s) => s.clearQueue)
   const seek = usePlayer((s) => s.seek)
-  const toast = useToast((s) => s.toast)
+  const openTrackActions = useToast((s) => s.openTrackActions)
 
   const [lyrics, setLyrics] = useState<LrcLine[]>([])
   const lyricBoxRef = useRef<HTMLDivElement>(null)
@@ -177,17 +197,6 @@ export function FullPlayer() {
   }, [trackId])
 
   const activeLine = currentLine(lyrics, currentTime)
-
-  /** 分享：复制当前歌曲详情页链接（/music/:id） */
-  const share = async () => {
-    if (!track) return
-    try {
-      await navigator.clipboard.writeText(`${location.origin}/music/${track.id}`)
-      toast('common.linkCopied', 'success')
-    } catch {
-      toast('common.retryLater', 'info')
-    }
-  }
 
   /** 手机竖屏：轻点封面/歌词区域切换视图（网易云式）；平板（≥768px）并排分栏不切换 */
   const onColTap = () => {
@@ -233,8 +242,12 @@ export function FullPlayer() {
             <span className="fp-artist truncate">{track.artist || t('common.unknown')}</span>
           </div>
         )}
-        <button className="icon-btn" onClick={share} aria-label={t('common.share')}>
-          <Icon name="share" size={20} />
+        <button
+          className="icon-btn"
+          onClick={() => track && openTrackActions(track)}
+          aria-label={t('common.more')}
+        >
+          <Icon name="more" size={22} />
         </button>
       </div>
 
@@ -251,6 +264,7 @@ export function FullPlayer() {
               </div>
               <div className="fp-fav-row">
                 <FpFavButton />
+                <FpShareButton />
                 <FpDownloadButton />
               </div>
               <PlayerProgress />
@@ -292,6 +306,7 @@ export function FullPlayer() {
           <div className="fp-foot">
             <div className="fp-fav-row">
               <FpFavButton />
+              <FpShareButton />
               <FpDownloadButton />
             </div>
 

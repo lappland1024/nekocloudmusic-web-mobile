@@ -160,6 +160,7 @@ export function TrackActionSheets() {
   const playQueue = usePlayer((s) => s.playQueue)
   const playNextTrack = usePlayer((s) => s.playNextTrack)
   const addToQueue = usePlayer((s) => s.addToQueue)
+  const setExpanded = usePlayer((s) => s.setExpanded)
   const favIds = useFavorites((s) => s.ids)
   const toggleFav = useFavorites((s) => s.toggle)
   const [shareTrack, setShareTrack] = useState<Track | null>(null)
@@ -232,6 +233,8 @@ export function TrackActionSheets() {
       icon: 'mic',
       onClick: () => {
         close()
+        // 从全屏播放器打开菜单时，跳页前先收起播放器，否则目标页被盖住
+        setExpanded(false)
         navigate(`/artist/${encodeURIComponent(track.artist)}`)
       },
     },
@@ -247,6 +250,7 @@ export function TrackActionSheets() {
       icon: 'info',
       onClick: () => {
         close()
+        setExpanded(false)
         navigate(`/music/${track.id}`)
       },
     },

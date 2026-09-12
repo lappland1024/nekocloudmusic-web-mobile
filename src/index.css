@@ -3054,7 +3054,8 @@ input[type='number']::-webkit-inner-spin-button {
   --edge-bg: #e5e5ea;
   --range-track: rgba(120, 120, 128, 0.32);
   --overlay-bg: rgba(0, 0, 0, 0.35);
-  --toast-bg: rgba(120, 120, 128, 0.35);
+  /* 弹层（Sheet/Dialog/Toast）同样走玻璃不透明度滑块；默认 0.72 保证可读性 */
+  --toast-bg: rgba(120, 120, 128, var(--glass-alpha, 0.72));
   /* 液态玻璃表面：透明度由 --glass-alpha 控制（设置里可调，默认 0.72） */
   --tabbar-bg: rgba(255, 255, 255, var(--glass-alpha, 0.72)); /* regular 材质近似 */
   --mini-bg: rgba(255, 255, 255, var(--glass-alpha, 0.72));
@@ -3097,7 +3098,7 @@ input[type='number']::-webkit-inner-spin-button {
     --edge-bg: #000000;
     --range-track: rgba(120, 120, 128, 0.5);
     --overlay-bg: rgba(0, 0, 0, 0.5);
-    --toast-bg: rgba(44, 44, 46, 0.72);
+    --toast-bg: rgba(44, 44, 46, var(--glass-alpha, 0.72));
     --tabbar-bg: rgba(28, 28, 30, var(--glass-alpha, 0.72));
     --mini-bg: rgba(28, 28, 30, var(--glass-alpha, 0.72));
 
