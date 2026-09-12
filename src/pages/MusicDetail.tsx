@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { MusicInfo } from '../types'
-import { getMusicInfo } from '../api'
+import { getLyrics, getMusicInfo } from '../api'
 import { apiUrl } from '../api/client'
 import { usePlayer, toTrack } from '../store/player'
 import { useFavorites } from '../store/favorites'
@@ -33,6 +33,7 @@ export function MusicDetail() {
   const toast = useToast((s) => s.toast)
 
   const [info, setInfo] = useState<MusicInfo | null>(null)
+  const [rawLyrics, setRawLyrics] = useState('')
   const [lyrics, setLyrics] = useState<LrcLine[]>([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
@@ -47,14 +48,21 @@ export function MusicDetail() {
     let alive = true
     setLoading(true)
     setFailed(false)
+    // 详情接口实测不返回歌词（字段缺失），歌词走独立的 /api/music/lyrics/{id}
     getMusicInfo(musicId)
       .then((d) => {
         if (!alive) return
         setInfo(d)
-        setLyrics(parseLrc(d.lyrics ?? ''))
       })
       .catch(() => alive && setFailed(true))
       .finally(() => alive && setLoading(false))
+    getLyrics(musicId)
+      .then((raw) => {
+        if (!alive) return
+        setRawLyrics(raw)
+        setLyrics(parseLrc(raw))
+      })
+      .catch(() => {})
     return () => {
       alive = false
     }
@@ -192,8 +200,8 @@ export function MusicDetail() {
                   </p>
                 ))}
               </div>
-            ) : info.lyrics ? (
-              <pre className="music-info-lyrics">{info.lyrics}</pre>
+            ) : rawLyrics ? (
+              <pre className="music-info-lyrics">{rawLyrics}</pre>
             ) : (
               <p className="no-lyrics">{t('player.noLyrics')}</p>
             )}

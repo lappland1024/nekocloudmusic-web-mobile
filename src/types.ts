@@ -116,16 +116,19 @@ export interface VideoRenderJob {
   error?: string
 }
 
-/** 音乐详情（GET /api/music/info/{id}） */
+/** 音乐详情（GET /api/music/info/{id}）
+ *  注意：实测该接口不返回歌词字段（文档与实际不符），歌词需另调 /api/music/lyrics/{id} */
 export interface MusicInfo {
   id: number
   title: string
   artist: string
   album: string
   duration: number
-  coverUrl: string
-  fileUrl: string
-  lyrics: string
+  filePath?: string
+  coverUrl?: string
+  language?: string
+  tags?: string
+  uploadUserId?: number
 }
 
 export interface ArtistResult {
