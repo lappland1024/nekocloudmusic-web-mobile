@@ -7,6 +7,7 @@ import type {
   MusicInfo,
   Playlist,
   Recommendation,
+  RecognizedTrack,
   User,
   VideoRenderJob,
   VipPayOrder,
@@ -267,6 +268,23 @@ export const getRanking = async (limit = 50) => {
 export const getLatest = async (limit = 30) => {
   const r = await request<MusicListResp>(`/api/music/latest?limit=${limit}`)
   return r.data ?? []
+}
+
+interface RecognizeResp extends ApiResponse {
+  matched?: boolean
+  data?: RecognizedTrack
+}
+
+/** 听歌识曲：上传录音片段（3–20s，≤8MiB）在自有曲库中匹配，无需登录 */
+export const recognizeMusic = async (audio: Blob, filename = 'record') => {
+  const fd = new FormData()
+  fd.append('audio', audio, filename)
+  const r = await request<RecognizeResp>('/api/music/recognize', {
+    method: 'POST',
+    formData: fd,
+    auth: false,
+  })
+  return { matched: !!r.matched, data: r.data ?? null }
 }
 
 // ---------- VIP ----------

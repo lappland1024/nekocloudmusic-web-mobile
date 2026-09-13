@@ -18,6 +18,7 @@ import { Uploads } from './pages/Uploads'
 import { Artist } from './pages/Artist'
 import { MusicDetail } from './pages/MusicDetail'
 import { DailyRecs } from './pages/DailyRecs'
+import { Recognize } from './pages/Recognize'
 import { Me } from './pages/Me'
 import { Vip } from './pages/Vip'
 import { Settings } from './pages/Settings'
@@ -77,6 +78,7 @@ function AnimatedRoutes() {
         <Route path="/artist/:name" element={<Artist />} />
         <Route path="/music/:id" element={<MusicDetail />} />
         <Route path="/daily" element={<DailyRecs />} />
+        <Route path="/recognize" element={<Recognize />} />
         <Route path="/me" element={<Me />} />
         <Route path="/vip" element={<Vip />} />
         <Route path="/settings" element={<Settings />} />

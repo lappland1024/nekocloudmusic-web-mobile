@@ -119,6 +119,9 @@ export function Search() {
               <Icon name="x" size={18} />
             </button>
           )}
+          <button className="icon-btn" onClick={() => navigate('/recognize')} aria-label={t('recognize.title')}>
+            <Icon name="mic" size={20} />
+          </button>
           <button className="btn btn-primary btn-sm" onClick={() => search()} disabled={busy}>
             {t('common.search')}
           </button>

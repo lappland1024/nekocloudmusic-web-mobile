@@ -131,6 +131,16 @@ export interface MusicInfo {
   uploadUserId?: number
 }
 
+/** 听歌识曲（POST /api/music/recognize）匹配结果 */
+export interface RecognizedTrack extends Music {
+  /** 匹配置信度 0–1（服务端阈值内才返回） */
+  confidence?: number
+  matchedLandmarks?: number
+  /** 录音片段在歌曲中的估计起始位置（秒） */
+  offsetSeconds?: number
+  sampleDurationSeconds?: number
+}
+
 export interface ArtistResult {
   name: string
   musicCount: number

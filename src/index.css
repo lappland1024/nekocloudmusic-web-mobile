@@ -2410,6 +2410,110 @@ input[type='number']::-webkit-inner-spin-button {
   color: var(--text-2);
 }
 
+/* ---------------- 听歌识曲 ---------------- */
+
+.recognize-page .recognize-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 48px 0 40px;
+}
+
+.recognize-hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-2);
+  text-align: center;
+}
+
+/* 大麦克风圆钮：录音时呼吸脉冲 */
+.recognize-mic {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent), #ffc46e);
+  color: #241a10;
+  box-shadow: 0 12px 36px rgba(255, 180, 84, 0.3);
+  transition: transform 0.12s;
+}
+
+.recognize-mic:active {
+  transform: scale(0.95);
+}
+
+.recognize-mic.is-active {
+  animation: recognize-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes recognize-pulse {
+  0%,
+  100% {
+    box-shadow: 0 12px 36px rgba(255, 180, 84, 0.3), 0 0 0 0 rgba(255, 180, 84, 0.35);
+  }
+  50% {
+    box-shadow: 0 12px 36px rgba(255, 180, 84, 0.3), 0 0 0 22px rgba(255, 180, 84, 0);
+  }
+}
+
+.recognize-status {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.recognize-loading {
+  padding: 30px 0;
+  color: var(--accent);
+}
+
+.recognize-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.recognize-result {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recognize-match-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.recognize-confidence {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.recognize-result .btn-lg {
+  width: 100%;
+}
+
 /* ---------------- 会员中心 ---------------- */
 
 .vip-status {
