@@ -2410,6 +2410,111 @@ input[type='number']::-webkit-inner-spin-button {
   color: var(--text-2);
 }
 
+/* ---------------- 外部歌单导入 ---------------- */
+
+.page-head-btns {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.import-progress-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.import-progress-line span:last-child {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.import-log {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 320px;
+  overflow-y: auto;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 6px;
+}
+
+.import-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.import-row-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.import-row-msg {
+  font-size: 11px;
+  color: var(--danger);
+}
+
+.import-row-status {
+  flex: none;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.import-row.is-imported {
+  color: var(--accent);
+}
+
+.import-row.is-failed {
+  color: var(--danger);
+}
+
+.import-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(255, 180, 84, 0.3);
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+.import-summary p {
+  margin: 0;
+}
+
+.import-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.import-failed {
+  color: var(--danger);
+}
+
+.import-summary .btn {
+  margin-top: 8px;
+}
+
 /* ---------------- 听歌识曲 ---------------- */
 
 .recognize-page .recognize-center {

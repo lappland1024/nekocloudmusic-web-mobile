@@ -19,6 +19,7 @@ import { Artist } from './pages/Artist'
 import { MusicDetail } from './pages/MusicDetail'
 import { DailyRecs } from './pages/DailyRecs'
 import { Recognize } from './pages/Recognize'
+import { ImportPlaylist } from './pages/ImportPlaylist'
 import { Me } from './pages/Me'
 import { Vip } from './pages/Vip'
 import { Settings } from './pages/Settings'
@@ -73,6 +74,7 @@ function AnimatedRoutes() {
         <Route path="/search" element={<Search />} />
         <Route path="/playlist/:id" element={<Playlist />} />
         <Route path="/my-playlists" element={<MyPlaylists />} />
+        <Route path="/import" element={<ImportPlaylist />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/uploads" element={<Uploads />} />
         <Route path="/artist/:name" element={<Artist />} />

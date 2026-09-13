@@ -117,9 +117,14 @@ export function MyPlaylists() {
         onBack={() => navigate(-1)}
         title={t('playlist.my')}
         right={
-          <button className="icon-btn" onClick={() => setCreateOpen(true)} aria-label={t('playlist.new')}>
-            <Icon name="plus" size={22} />
-          </button>
+          <div className="page-head-btns">
+            <button className="icon-btn" onClick={() => navigate('/import')} aria-label={t('import.title')}>
+              <Icon name="download" size={20} />
+            </button>
+            <button className="icon-btn" onClick={() => setCreateOpen(true)} aria-label={t('playlist.new')}>
+              <Icon name="plus" size={22} />
+            </button>
+          </div>
         }
       />
 
