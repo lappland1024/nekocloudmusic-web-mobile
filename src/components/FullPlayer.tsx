@@ -222,109 +222,114 @@ export function FullPlayer() {
     }
   }, [activeLine, view])
 
-  if (!expanded) return null
+  // 播放器收起但队列面板打开时仍需渲染（Sheet 已移出全屏层）
+  if (!expanded && !showQueue) return null
 
   return (
-    <div className="full-player">
-      {/* 封面氛围背景 */}
-      {track && (
-        <div className="fp-blur" aria-hidden="true">
-          <img src={apiUrl(track.coverUrl ?? `/api/music/cover/${track.id}`)} alt="" onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
-        </div>
-      )}
+    <>
+      {expanded && (
+        <div className="full-player">
+          {/* 封面氛围背景 */}
+          {track && (
+            <div className="fp-blur" aria-hidden="true">
+              <img src={apiUrl(track.coverUrl ?? `/api/music/cover/${track.id}`)} alt="" onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} />
+            </div>
+          )}
 
-      <div className="fp-head">
-        <button className="icon-btn" onClick={() => setExpanded(false)} aria-label={t('common.close')}>
-          <Icon name="chevronDown" size={24} />
-        </button>
-        {track && (
-          <div className="fp-head-meta">
-            <span className="fp-title truncate">{track.title}</span>
-            <span className="fp-artist truncate">{track.artist || t('common.unknown')}</span>
+          <div className="fp-head">
+            <button className="icon-btn" onClick={() => setExpanded(false)} aria-label={t('common.close')}>
+              <Icon name="chevronDown" size={24} />
+            </button>
+            {track && (
+              <div className="fp-head-meta">
+                <span className="fp-title truncate">{track.title}</span>
+                <span className="fp-artist truncate">{track.artist || t('common.unknown')}</span>
+              </div>
+            )}
+            <button
+              className="icon-btn"
+              onClick={() => track && openTrackActions(track)}
+              aria-label={t('common.more')}
+            >
+              <Icon name="more" size={22} />
+            </button>
           </div>
-        )}
-        <button
-          className="icon-btn"
-          onClick={() => track && openTrackActions(track)}
-          aria-label={t('common.more')}
-        >
-          <Icon name="more" size={22} />
-        </button>
-      </div>
 
-      {track ? (
-        <>
-          <div className="fp-body">
-            {/* 左侧：封面 + 进度条 + 控制（手机仅显示封面，平板并排全显） */}
-            <div className={`fp-cover-col ${view === 'cover' ? '' : 'hide'}`} onClick={onColTap}>
-              <div className="fp-cover-wrap">
-                <div className="fp-cover">
-                  <Cover src={track.coverUrl} musicId={track.id} rounded={22} />
-                  {loading && <div className="fp-cover-loading" />}
+          {track ? (
+            <>
+              <div className="fp-body">
+                {/* 左侧：封面 + 进度条 + 控制（手机仅显示封面，平板并排全显） */}
+                <div className={`fp-cover-col ${view === 'cover' ? '' : 'hide'}`} onClick={onColTap}>
+                  <div className="fp-cover-wrap">
+                    <div className="fp-cover">
+                      <Cover src={track.coverUrl} musicId={track.id} rounded={22} />
+                      {loading && <div className="fp-cover-loading" />}
+                    </div>
+                  </div>
+                  <div className="fp-fav-row">
+                    <FpFavButton />
+                    <FpShareButton />
+                    <FpDownloadButton />
+                  </div>
+                  <PlayerProgress />
+                  <PlayerControls />
+                </div>
+                {/* 右侧：歌词（手机按 view 显隐，平板并排常显） */}
+                <div className={`fp-lyrics-col ${view === 'lyrics' ? '' : 'hide'}`} onClick={onColTap}>
+                  <div className="lyrics" ref={lyricBoxRef}>
+                    {lyrics.length > 0 ? (
+                      <div className="lyrics-inner">
+                        {lyrics.map((l, i) => (
+                          <p
+                            key={i}
+                            data-line={i}
+                            className={`lyric-line ${i === activeLine ? 'active' : ''} ${l.text ? '' : 'empty'}`}
+                          >
+                            <span className="lyric-text">{l.text || '♪'}</span>
+                            <button
+                              className="lyric-seek"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                seek(l.time)
+                              }}
+                              aria-label={t('player.seekTo')}
+                            >
+                              <Icon name="play" size={11} />
+                            </button>
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="no-lyrics">{t('player.noLyrics')}</p>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="fp-fav-row">
-                <FpFavButton />
-                <FpShareButton />
-                <FpDownloadButton />
-              </div>
-              <PlayerProgress />
-              <PlayerControls />
-            </div>
-            {/* 右侧：歌词（手机按 view 显隐，平板并排常显） */}
-            <div className={`fp-lyrics-col ${view === 'lyrics' ? '' : 'hide'}`} onClick={onColTap}>
-              <div className="lyrics" ref={lyricBoxRef}>
-                {lyrics.length > 0 ? (
-                  <div className="lyrics-inner">
-                    {lyrics.map((l, i) => (
-                      <p
-                        key={i}
-                        data-line={i}
-                        className={`lyric-line ${i === activeLine ? 'active' : ''} ${l.text ? '' : 'empty'}`}
-                      >
-                        <span className="lyric-text">{l.text || '♪'}</span>
-                        <button
-                          className="lyric-seek"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            seek(l.time)
-                          }}
-                          aria-label={t('player.seekTo')}
-                        >
-                          <Icon name="play" size={11} />
-                        </button>
-                      </p>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="no-lyrics">{t('player.noLyrics')}</p>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* 底部栏（手机版）：收藏+下载 / 进度条 / 控制；封面/歌词视图靠轻点切换 */}
-          <div className="fp-foot">
-            <div className="fp-fav-row">
-              <FpFavButton />
-              <FpShareButton />
-              <FpDownloadButton />
-            </div>
+              {/* 底部栏（手机版）：收藏+下载 / 进度条 / 控制；封面/歌词视图靠轻点切换 */}
+              <div className="fp-foot">
+                <div className="fp-fav-row">
+                  <FpFavButton />
+                  <FpShareButton />
+                  <FpDownloadButton />
+                </div>
 
-            <PlayerProgress />
-            <PlayerControls />
-          </div>
-        </>
-      ) : (
-        <div className="fp-empty">
-          <EmptyState text={t('player.queueEmpty')} />
-          <button className="btn btn-ghost" onClick={() => setExpanded(false)}>
-            {t('common.close')}
-          </button>
+                <PlayerProgress />
+                <PlayerControls />
+              </div>
+            </>
+          ) : (
+            <div className="fp-empty">
+              <EmptyState text={t('player.queueEmpty')} />
+              <button className="btn btn-ghost" onClick={() => setExpanded(false)}>
+                {t('common.close')}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* 播放队列 */}
+      {/* 播放队列（独立于全屏层：收起状态下也能从 MiniPlayer 打开） */}
       <Sheet
         open={showQueue}
         onClose={() => setShowQueue(false)}
@@ -375,6 +380,6 @@ export function FullPlayer() {
           {queue.length === 0 && <p className="queue-empty">{t('player.queueEmpty')}</p>}
         </div>
       </Sheet>
-    </div>
+    </>
   )
 }

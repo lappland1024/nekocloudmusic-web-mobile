@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useT } from '../i18n'
+import { useLiquidGlass } from '../hooks/useLiquidGlass'
 import { Icon } from './Icon'
 
 // 主 tab：手机底部导航 / 平板侧边栏顶部
@@ -32,8 +33,9 @@ function TabLink({ to, icon, keyText, end }: { to: string; icon: string; keyText
 }
 
 export function TabBar() {
+  const glassRef = useLiquidGlass<HTMLElement>()
   return (
-    <nav className="tabbar">
+    <nav className="tabbar" ref={glassRef}>
       {TABS.map((tab) => (
         <TabLink key={tab.to} to={tab.to} icon={tab.icon} keyText={tab.key} end={tab.end} />
       ))}

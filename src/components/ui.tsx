@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { useToast } from '../store/ui'
 import { useBodyLock } from '../hooks/useBodyLock'
+import { useLiquidGlass } from '../hooks/useLiquidGlass'
 import { Icon } from './Icon'
 import { Logo } from './Logo'
 import { useT } from '../i18n'
@@ -33,6 +34,7 @@ export function ConfirmDialog() {
   const confirm = useToast((s) => s.confirm)
   const close = useToast((s) => s.closeConfirm)
   const t = useT()
+  const glassRef = useLiquidGlass<HTMLDivElement>()
 
   useBodyLock(!!confirm)
 
@@ -54,7 +56,7 @@ export function ConfirmDialog() {
 
   return (
     <div className="overlay overlay-center" onClick={close}>
-      <div className="dialog" onClick={(e) => e.stopPropagation()}>
+      <div className="dialog" onClick={(e) => e.stopPropagation()} ref={glassRef}>
         {confirm.title && <div className="dialog-title">{confirm.title}</div>}
         <div className="dialog-text">{confirm.text}</div>
         <div className="dialog-actions">
@@ -85,6 +87,8 @@ interface SheetProps {
 
 export function Sheet({ open, onClose, title, right, children, bottom = true }: SheetProps) {
   useBodyLock(open)
+  const glassRef = useLiquidGlass<HTMLDivElement>()
+  const showGlass = !bottom // .sheet 内部滚动不适合折射层，仅居中 dialog 接入
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -102,6 +106,7 @@ export function Sheet({ open, onClose, title, right, children, bottom = true }: 
         className={bottom ? 'sheet' : 'dialog'}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        ref={showGlass ? glassRef : undefined}
       >
         {title != null && (
           <div className="sheet-head">

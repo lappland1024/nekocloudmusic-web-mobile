@@ -2964,6 +2964,20 @@ input[type='number']::-webkit-inner-spin-button {
   text-align: center;
 }
 
+/* 登录/注册页底部：账号体系说明（无自建数据库） */
+.auth-account-note {
+  margin: 22px auto 0;
+  max-width: 420px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-3);
+  text-align: center;
+}
+
 .code-row {
   align-items: flex-end;
 }
@@ -4184,17 +4198,27 @@ input[type='number']::-webkit-inner-spin-button {
     width: 100%;
   }
 
-  /* 每日推荐卡：更舒展 */
+  /* 每日推荐卡：横向布局（信息在左、按钮在右），摆脱"大号手机"的堆叠感 */
   .daily-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
     padding: 26px 28px;
   }
 
-  /* 推荐卡猫猫：平板下移到右侧垂直居中，避免压住"播放推荐"按钮（手机保持右下角） */
+  .daily-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .daily-card .btn-play {
+    flex: none;
+    align-self: center;
+  }
+
+  /* 横向布局下猫猫装饰会压住右侧按钮，直接隐藏 */
   .daily-cat {
-    top: 50%;
-    bottom: auto;
-    right: 28px;
-    transform: translateY(-50%);
+    display: none;
   }
 
   /* 全屏播放器：封面放大、横向留白增加 */
@@ -4323,6 +4347,28 @@ input[type='number']::-webkit-inner-spin-button {
     width: 240px;
     padding-left: 14px;
     padding-right: 14px;
+  }
+
+  /* ---- 首页宽屏双栏：头/问候/每日卡通栏，排行与最新左右并排 ---- */
+  .home {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: start;
+  }
+
+  .home-head,
+  .home-hello,
+  .daily-card,
+  .daily-empty {
+    grid-column: 1 / -1;
+  }
+
+  /* 首页头的吸顶背景在 grid 里仍铺满通栏 */
+  .home .home-head {
+    margin: 0 -32px;
+    padding-left: 32px;
+    padding-right: 32px;
   }
 }
 
@@ -4492,17 +4538,18 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 /* ============================================================
-   iOS 液态玻璃增强（借鉴 shuding/liquid-glass 的滤镜链思路）
-   要点：降模糊更清透 + 提对比/亮度/饱和（背后内容可见）
-        + 边缘高光 + 顶部亮边 + 底部内反光 + 曲面 tint
-   全部使用 Safari 支持的纯 backdrop-filter 内置函数实现
-   （shuding 原方案的 SVG displacement 折射依赖 backdrop-filter
-   引用 url(#filter)，iOS Safari 不支持，故以 CSS 等价层替代）
+   iOS 液态玻璃（方案移植自 wxperia/liquid-glass-vue）
+   结构：backdrop-filter 移到独立 warp 伪元素层（::before），
+   warp 层再经 filter:url(#neko-liquid-glass) 做 SVG 位移折射：
+   - Chrome/Android：真实"液态"边缘折射 + RGB 色差（原生效果）
+   - iOS Safari：不支持引用 SVG 滤镜，自动退化为 blur+saturate
+     （该库 README 亦注明 Safari 位移不可见，为已知平台限制）
+   Sheet 因内部滚动（overflow-y:auto）不适用 warp 层，保持直挂。
    ============================================================ */
 
 :root[data-theme^='ios'] {
   --glass-blur: 16px;
-  --glass-saturate: 1.35;
+  --glass-saturate: 1.8;
 }
 
 :root[data-theme='ios-light'] {
@@ -4519,29 +4566,66 @@ input[type='number']::-webkit-inner-spin-button {
   --glass-border: rgba(255, 255, 255, 0.22);
 }
 
-/* 统一滤镜链：清透液态玻璃（blur 更轻、对比/亮度提升，背景内容透出） */
+/* ---- warp 折射层：TabBar / MiniPlayer / Dialog / Toast（非滚动容器） ----
+   元素自身 backdrop/background 置空，tint + blur + 位移折射全在 ::before 上；
+   filter:url() 在 Safari 被忽略 → 自动退化为普通玻璃，Chrome 上是原生液态玻璃 */
 :root[data-theme^='ios'] .tabbar,
 :root[data-theme^='ios'] .mini-player,
-:root[data-theme^='ios'] .sheet,
 :root[data-theme^='ios'] .dialog,
-:root[data-theme^='ios'] .toast,
+:root[data-theme^='ios'] .toast {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: transparent;
+}
+
+:root[data-theme^='ios'] .tabbar::before,
+:root[data-theme^='ios'] .mini-player::before,
+:root[data-theme^='ios'] .dialog::before,
+:root[data-theme^='ios'] .toast::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  /* --lg-bdf 由 useLiquidGlass 在 Chromium 上注入：
+     url(#id) 物理折射 + blur + saturate；不支持时用后面的磨砂兜底 */
+  backdrop-filter: var(--lg-bdf, blur(var(--glass-blur)) saturate(var(--glass-saturate)));
+  -webkit-backdrop-filter: var(--lg-bdf, blur(var(--glass-blur)) saturate(var(--glass-saturate)));
+}
+
+/* WebKit 环形透镜层（useLiquidGlass 注入）：clip-path/transform 由 JS 按尺寸计算 */
+.lg-ring {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  /* 只做轻饱和：下层 warp 已带 blur+tint，环层把它的输出按级放大 */
+  backdrop-filter: saturate(1.08);
+  -webkit-backdrop-filter: saturate(1.08);
+}
+
+/* warp 层的曲面 tint：顶部亮、底部微暗，叠在各自玻璃底色上 */
+:root[data-theme^='ios'] .tabbar::before,
+:root[data-theme^='ios'] .mini-player::before {
+  background: var(--glass-tint), var(--tabbar-bg);
+}
+
+:root[data-theme^='ios'] .dialog::before,
+:root[data-theme^='ios'] .toast::before {
+  background: var(--glass-tint), var(--toast-bg);
+}
+
+/* ---- Sheet（内部滚动，不能上 warp 层）与卡片：保持直挂 backdrop ---- */
+:root[data-theme^='ios'] .sheet,
 :root[data-theme^='ios'] .me-menu,
 :root[data-theme^='ios'] .about-card,
 :root[data-theme^='ios'] .daily-card,
 :root[data-theme^='ios'] .list-section .form {
   backdrop-filter: blur(var(--glass-blur)) contrast(1.16) brightness(1.07) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) contrast(1.16) brightness(1.07) saturate(var(--glass-saturate));
-}
-
-/* 背景：顶部亮、底部微暗的曲面 tint 叠在原玻璃底色上 */
-:root[data-theme^='ios'] .tabbar,
-:root[data-theme^='ios'] .mini-player {
-  background: var(--glass-tint), var(--tabbar-bg);
-}
-
-:root[data-theme^='ios'] .sheet,
-:root[data-theme^='ios'] .dialog,
-:root[data-theme^='ios'] .toast {
   background: var(--glass-tint), var(--toast-bg);
 }
 

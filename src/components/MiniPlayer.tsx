@@ -1,8 +1,10 @@
 import { usePlayer } from '../store/player'
+import { useLiquidGlass } from '../hooks/useLiquidGlass'
 import { Cover } from './Cover'
 import { Icon } from './Icon'
 
 export function MiniPlayer() {
+  const glassRef = useLiquidGlass<HTMLDivElement>()
   const queue = usePlayer((s) => s.queue)
   const index = usePlayer((s) => s.index)
   const playing = usePlayer((s) => s.playing)
@@ -11,6 +13,7 @@ export function MiniPlayer() {
   const duration = usePlayer((s) => s.duration)
   const toggle = usePlayer((s) => s.toggle)
   const setExpanded = usePlayer((s) => s.setExpanded)
+  const setShowQueue = usePlayer((s) => s.setShowQueue)
 
   const track = queue[index]
   if (!track) return null
@@ -18,7 +21,7 @@ export function MiniPlayer() {
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
-    <div className="mini-player" onClick={() => setExpanded(true)}>
+    <div className="mini-player" onClick={() => setExpanded(true)} ref={glassRef}>
       <div className="mini-progress" style={{ width: `${pct}%` }} />
       <Cover src={track.coverUrl} musicId={track.id} className="mini-cover" rounded={8} />
       <div className="mini-meta">
@@ -41,13 +44,13 @@ export function MiniPlayer() {
       </button>
       <button
         className="icon-btn mini-btn"
-        aria-label="expand"
+        aria-label="queue"
         onClick={(e) => {
           e.stopPropagation()
-          setExpanded(true)
+          setShowQueue(true)
         }}
       >
-        <Icon name="chevronUp" size={20} />
+        <Icon name="list" size={20} />
       </button>
     </div>
   )

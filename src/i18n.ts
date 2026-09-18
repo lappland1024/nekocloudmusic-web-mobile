@@ -225,6 +225,7 @@ const zh: Record<string, string> = {
   'auth.registerNow': '还没有账号？去注册',
   'auth.hasAccount': '已有账号？去登录',
   'auth.toLogin': '去登录',
+  'auth.accountNote': '本站可直接使用 music.cnmsb.xin 的账号登录；在本站注册的账号同样是 music.cnmsb.xin 的账号。本站没有自己的数据库，不存储任何账号信息。',
 
   // 我的
   'me.notLogin': '未登录',
@@ -570,6 +571,7 @@ const en: Record<string, string> = {
   'auth.registerNow': 'New here? Create account',
   'auth.hasAccount': 'Already have an account?',
   'auth.toLogin': 'Sign in',
+  'auth.accountNote': 'Sign in with your music.cnmsb.xin account. Accounts created here belong to music.cnmsb.xin too. This site has no database of its own and stores no account information.',
 
   'me.notLogin': 'Not signed in',
   'me.loginPrompt': 'Sign in to sync favorites, playlists & daily mix',

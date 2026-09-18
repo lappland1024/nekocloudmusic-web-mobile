@@ -297,6 +297,9 @@ export function Auth() {
         </div>
       )}
 
+      {/* 账号说明：本站不存储账号，账号体系属于 music.cnmsb.xin */}
+      <p className="auth-account-note">{t('auth.accountNote')}</p>
+
       <SliderCaptcha open={captchaOpen} onClose={() => setCaptchaOpen(false)} onPass={onCaptchaPass} />
     </div>
   )
