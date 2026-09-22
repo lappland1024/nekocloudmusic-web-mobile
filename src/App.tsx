@@ -9,6 +9,7 @@ import { FullPlayer } from './components/FullPlayer'
 import { TabBar } from './components/TabBar'
 import { ConfirmDialog, ToastHost } from './components/ui'
 import { PlaylistPickerSheet, TrackActionSheets } from './components/TrackList'
+import { TrackContextMenu } from './components/TrackContextMenu'
 import { Home } from './pages/Home'
 import { Search } from './pages/Search'
 import { Playlist } from './pages/Playlist'
@@ -136,31 +137,40 @@ export default function App() {
   useEffect(() => {
     // iOS 旋转屏幕 / 尺寸变化后，fixed 元素（全屏播放器等）偶发"渲染偏移"：
     // 布局位置正常但内容被渲染到视口外（头部上移、点不到收起/收藏）。
-    // 除强制 reflow 外，再对 fixed 全屏层做一次合成层重置
-    // （translateZ(0) → 下一帧移除），强制浏览器按新视口重新合成。
+    // 关键：standalone PWA 里旋转后视口尺寸要 200-500ms 才稳定，
+    // 单次重排会扑空 —— 这里按 0/250/600ms 三次强制 reflow +
+    // 合成层重置（translateZ(0) → 下一帧移除），直到新视口稳定。
     const refresh = () => {
-      requestAnimationFrame(() => {
-        void document.body.offsetHeight // 强制 reflow
-        document.querySelectorAll('.full-player').forEach((fp) => {
-          const el = fp as HTMLElement
-          el.style.willChange = 'transform'
-          el.style.transform = 'translateZ(0)'
-        })
-        requestAnimationFrame(() => {
-          document.querySelectorAll('.full-player').forEach((fp) => {
-            const el = fp as HTMLElement
-            el.style.transform = ''
-            el.style.willChange = ''
+      ;[0, 250, 600].forEach((ms) => {
+        window.setTimeout(() => {
+          requestAnimationFrame(() => {
+            void document.body.offsetHeight // 强制 reflow
+            void window.innerHeight // 触发视口相关布局
+            document.querySelectorAll('.full-player').forEach((fp) => {
+              const el = fp as HTMLElement
+              el.style.willChange = 'transform'
+              el.style.transform = 'translateZ(0)'
+            })
+            requestAnimationFrame(() => {
+              document.querySelectorAll('.full-player').forEach((fp) => {
+                const el = fp as HTMLElement
+                el.style.transform = ''
+                el.style.willChange = ''
+              })
+              void document.body.offsetHeight
+            })
           })
-          void document.body.offsetHeight
-        })
+        }, ms)
       })
     }
     window.addEventListener('orientationchange', refresh)
     window.addEventListener('resize', refresh)
+    // standalone PWA 里 window resize 偶发不触发，visualViewport 更可靠
+    window.visualViewport?.addEventListener('resize', refresh)
     return () => {
       window.removeEventListener('orientationchange', refresh)
       window.removeEventListener('resize', refresh)
+      window.visualViewport?.removeEventListener('resize', refresh)
     }
   }, [])
 
@@ -190,6 +200,7 @@ export default function App() {
       </div>
 
       <FullPlayer />
+      <TrackContextMenu />
       <ToastHost />
       <ConfirmDialog />
       <TrackActionSheets />

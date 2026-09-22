@@ -26,6 +26,13 @@ export type TrackAction = {
   onClick: () => void
 }
 
+/** 长按弹出的上下文菜单（iOS 式：按住滑动选择、松手执行） */
+export interface ContextMenuState {
+  track: Track
+  x: number
+  y: number
+}
+
 interface UIState {
   toasts: ToastItem[]
   toast: (keyOrText: string, type?: ToastType, vars?: Record<string, string | number>) => void
@@ -42,6 +49,16 @@ interface UIState {
   playlistPicker: Track | null
   openPlaylistPicker: (track: Track) => void
   closePlaylistPicker: () => void
+
+  contextMenu: ContextMenuState | null
+  openContextMenu: (track: Track, x: number, y: number) => void
+  closeContextMenu: () => void
+  /** 当前滑动高亮的菜单项下标（-1 = 未选中），由手势行通过 elementFromPoint 中继 */
+  contextHighlight: number
+  setContextHighlight: (i: number) => void
+  /** 松手提交信号（自增计数），菜单组件监听它执行高亮项 */
+  contextCommit: number
+  commitContext: () => void
 
   loading: boolean
   setLoading: (v: boolean) => void
@@ -71,6 +88,14 @@ export const useToast = create<UIState>()((set, get) => ({
   playlistPicker: null,
   openPlaylistPicker: (track) => set({ playlistPicker: track }),
   closePlaylistPicker: () => set({ playlistPicker: null }),
+
+  contextMenu: null,
+  openContextMenu: (track, x, y) => set({ contextMenu: { track, x, y }, contextHighlight: -1 }),
+  closeContextMenu: () => set({ contextMenu: null }),
+  contextHighlight: -1,
+  setContextHighlight: (contextHighlight) => set({ contextHighlight }),
+  contextCommit: 0,
+  commitContext: () => set((s) => ({ contextCommit: s.contextCommit + 1 })),
 
   loading: false,
   setLoading: (v) => set({ loading: v }),

@@ -74,12 +74,22 @@ export function Home() {
         </div>
         <button className="avatar-btn" onClick={() => navigate('/me')} aria-label={t('nav.me')}>
           {user ? (
-            <img
-              key={user.id}
-              src={apiUrl(`/api/user/avatar/${user.id}`)}
-              alt={user.username}
-              onError={(e) => ((e.target as HTMLImageElement).style.visibility = 'hidden')}
-            />
+            <>
+              <img
+                key={user.id}
+                src={apiUrl(`/api/user/avatar/${user.id}`)}
+                alt={user.username}
+                onError={(e) => {
+                  // 头像加载失败时退回默认图标，避免空圆圈
+                  ;(e.target as HTMLImageElement).style.display = 'none'
+                  const fb = e.currentTarget.parentElement?.querySelector('.avatar-fallback')
+                  if (fb instanceof HTMLElement) fb.style.display = 'flex'
+                }}
+              />
+              <span className="avatar-fallback" aria-hidden="true">
+                <Icon name="user" size={22} />
+              </span>
+            </>
           ) : (
             <Icon name="user" size={22} />
           )}

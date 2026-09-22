@@ -92,15 +92,17 @@ export function Search() {
     <div className="page search">
       <div className="search-bar-wrap">
         <div className="search-bar">
-          <Icon name="search" size={20} />
-          <input
-            ref={inputRef}
-            className="search-input"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={t('search.placeholder')}
-            onKeyDown={(e) => e.key === 'Enter' && search()}
-          />
+          <div className="search-input-wrap">
+            <Icon name="search" size={20} className="search-ic" />
+            <input
+              ref={inputRef}
+              className="search-input"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={t('search.placeholder')}
+              onKeyDown={(e) => e.key === 'Enter' && search()}
+            />
+          </div>
           {q && (
             <button
               className="icon-btn"

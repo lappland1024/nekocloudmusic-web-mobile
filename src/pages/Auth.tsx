@@ -203,14 +203,17 @@ export function Auth() {
         </p>
       </div>
 
-      <div className="segmented auth-tabs">
-        <button className={`seg ${mode === 'login' ? 'active' : ''}`} onClick={() => setMode('login')}>
-          {t('auth.login')}
-        </button>
-        <button className={`seg ${mode === 'register' ? 'active' : ''}`} onClick={() => setMode('register')}>
-          {t('auth.register')}
-        </button>
-      </div>
+      {/* 忘记密码是登录的子流程：隐藏分段控件，避免两个 tab 都呈未选中态 */}
+      {mode !== 'forgot' && (
+        <div className="segmented auth-tabs">
+          <button className={`seg ${mode === 'login' ? 'active' : ''}`} onClick={() => setMode('login')}>
+            {t('auth.login')}
+          </button>
+          <button className={`seg ${mode === 'register' ? 'active' : ''}`} onClick={() => setMode('register')}>
+            {t('auth.register')}
+          </button>
+        </div>
+      )}
 
       {mode === 'login' && (
         <div className="form auth-form">

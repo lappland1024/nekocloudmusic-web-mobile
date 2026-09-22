@@ -25,6 +25,8 @@
   --danger-soft: rgba(255, 107, 107, 0.14);
 
   --cream: #f6ead4;
+  /* 压在 accent 底上的前景色（Neko 琥珀底用深棕，系统蓝底用白） */
+  --on-accent: #241a10;
 
   --radius: 16px;
   --radius-s: 10px;
@@ -233,7 +235,9 @@ body.body-locked .page {
 }
 
 .page-head {
-  display: flex;
+  /* 三栏 grid：左右等宽 1fr，标题居中；右侧可放多个按钮而不挤压标题 */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 4px;
   min-height: 48px;
@@ -251,23 +255,29 @@ body.body-locked .page {
   background: transparent;
 }
 
+.page-head > :first-child {
+  justify-self: start;
+}
+
 .page-head-spacer {
   width: 40px;
   flex: none;
 }
 
 .page-head-title {
-  flex: 1;
   text-align: center;
   font-size: 16px;
   font-weight: 600;
+  min-width: 0;
 }
 
 .page-head-right {
-  width: 40px;
-  flex: none;
+  width: auto;
+  min-width: 40px;
+  justify-self: end;
   display: flex;
   justify-content: flex-end;
+  align-items: center;
 }
 
 /* ---------------- 底部导航 ---------------- */
@@ -350,9 +360,14 @@ body.body-locked .page {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #ffc46e);
-  color: #241a10;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong, var(--accent)));
+  color: var(--on-accent);
   box-shadow: 0 6px 18px rgba(255, 180, 84, 0.22);
+}
+
+:root[data-theme^='ios'] .btn-primary,
+:root[data-theme^='apple'] .btn-primary {
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .btn-primary:active {
@@ -373,7 +388,7 @@ body.body-locked .page {
 
 .btn-play {
   background: linear-gradient(135deg, var(--accent), #ffc46e);
-  color: #241a10;
+  color: var(--on-accent);
   border: none;
   box-shadow: 0 6px 18px rgba(255, 180, 84, 0.25);
 }
@@ -394,6 +409,15 @@ body.body-locked .page {
   color: var(--text-2);
   flex: none;
   transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+
+/* 视觉 38px，触控热区扩到 ≥44px（HIG） */
+.icon-btn::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
 }
 
 .icon-btn:active {
@@ -554,11 +578,14 @@ input[type='number']::-webkit-inner-spin-button {
 .toast-host {
   position: fixed;
   top: calc(var(--sat) + 14px);
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  /* 不用 transform 居中：toast 内部有 backdrop-filter 层（同整页糊 bug 触发链） */
+  margin: 0 auto;
   z-index: 1000;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
   width: max-content;
   max-width: calc(100vw - 40px);
@@ -577,8 +604,19 @@ input[type='number']::-webkit-inner-spin-button {
   animation: toast-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
 
+/* 成功色跟随主题：深色玻璃底用浅绿，白天浅色 toast 用深绿保证对比度 */
+:root {
+  --success-on-toast: #8fe3a7;
+}
+
+:root[data-theme='neko-light'],
+:root[data-theme='ios-light'],
+:root[data-theme='apple-light'] {
+  --success-on-toast: #1f7a3f;
+}
+
 .toast-success {
-  color: #8fe3a7;
+  color: var(--success-on-toast);
 }
 
 .toast-error {
@@ -672,6 +710,9 @@ input[type='number']::-webkit-inner-spin-button {
   border-radius: 18px;
   padding: 22px 20px 16px;
   width: min(320px, calc(100vw - 48px));
+  max-height: min(80vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   animation: dialog-in 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
 
@@ -723,6 +764,16 @@ input[type='number']::-webkit-inner-spin-button {
   color: var(--text);
   text-align: left;
   transition: background 0.12s;
+}
+
+.sheet-action .truncate {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sheet-action > svg,
+.sheet-action > .sheet-count {
+  flex: none;
 }
 
 .sheet-action:active {
@@ -939,6 +990,18 @@ input[type='number']::-webkit-inner-spin-button {
   gap: 7px;
   font-size: 15px;
   font-weight: 600;
+  /* flex 行内的省略号依赖子项可收缩 */
+  min-width: 0;
+  overflow: hidden;
+}
+
+.track-title .truncate {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.track-title .eq {
+  flex: none;
 }
 
 .track-row.is-playing .track-title {
@@ -1207,10 +1270,20 @@ input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   appearance: none;
   flex: 1;
+  /* 视觉轨道 5px，触控热区放大到 28px */
+  height: 28px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.range::-webkit-slider-runnable-track {
   height: 5px;
   border-radius: 3px;
-  background: var(--range-track);
-  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--pct, 0%),
+    var(--range-track) var(--pct, 0%)
+  );
 }
 
 .range::-webkit-slider-thumb {
@@ -1218,16 +1291,29 @@ input[type='number']::-webkit-inner-spin-button {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: var(--cream);
+  background: var(--surface, #fff);
   border: 3px solid var(--accent);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  margin-top: -5px; /* (5 - 15) / 2，垂直居中于轨道 */
+}
+
+.range::-moz-range-track {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--range-track);
+}
+
+.range::-moz-range-progress {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--accent);
 }
 
 .range::-moz-range-thumb {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--cream);
+  background: var(--surface, #fff);
   border: 3px solid var(--accent);
 }
 
@@ -1261,7 +1347,7 @@ input[type='number']::-webkit-inner-spin-button {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, var(--accent), #ffc46e);
-  color: #241a10;
+  color: var(--on-accent);
   box-shadow: 0 10px 28px rgba(255, 180, 84, 0.35);
   transition: transform 0.08s ease;
 }
@@ -1279,7 +1365,7 @@ input[type='number']::-webkit-inner-spin-button {
   height: 26px;
   border-radius: 50%;
   border: 3px solid rgba(36, 26, 16, 0.3);
-  border-top-color: #241a10;
+  border-top-color: var(--on-accent);
   animation: spin 0.8s linear infinite;
 }
 
@@ -1345,6 +1431,14 @@ input[type='number']::-webkit-inner-spin-button {
   color: var(--text-2);
   opacity: 0.45;
   transition: opacity 0.2s, color 0.2s, background 0.2s;
+  position: relative;
+}
+
+/* 歌词旁小按钮热区扩到 40px+，视觉尺寸不变 */
+.lyric-seek::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 .lyric-line:hover .lyric-seek,
@@ -1413,8 +1507,8 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 .queue-remove {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
 }
 
 .queue-empty {
@@ -1425,8 +1519,8 @@ input[type='number']::-webkit-inner-spin-button {
 
 /* 队列一键清空：红色垃圾桶 */
 .queue-clear {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   color: var(--danger);
 }
 
@@ -1479,12 +1573,23 @@ input[type='number']::-webkit-inner-spin-button {
   justify-content: center;
   color: var(--text-2);
   overflow: hidden;
+  position: relative;
 }
 
 .avatar-btn img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 头像加载失败时的默认图标层 */
+.avatar-fallback {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
 }
 
 .home-hello {
@@ -1826,6 +1931,7 @@ input[type='number']::-webkit-inner-spin-button {
 .search-input-wrap {
   position: relative;
   flex: 1;
+  min-width: 0;
 }
 
 .search-input-wrap .search-ic {
@@ -1839,10 +1945,11 @@ input[type='number']::-webkit-inner-spin-button {
 
 .search-input {
   width: 100%;
+  min-width: 0;
   background: var(--surface-2);
   border: 1px solid var(--line-2);
   border-radius: 14px;
-  padding: 12px 14px;
+  padding: 12px 14px 12px 42px;
   font-size: 15px;
   color: var(--text);
   transition: border-color 0.15s;
@@ -1855,8 +1962,8 @@ input[type='number']::-webkit-inner-spin-button {
 
 .search-history {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: 0;
   padding: 6px 0;
 }
 
@@ -1896,7 +2003,8 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 .search-tab {
-  padding: 6px 14px;
+  padding: 8px 14px;
+  min-height: 36px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
@@ -1930,7 +2038,8 @@ input[type='number']::-webkit-inner-spin-button {
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 7px 14px;
+  padding: 8px 14px;
+  min-height: 36px;
   font-size: 13px;
   color: var(--text-2);
 }
@@ -2099,11 +2208,11 @@ input[type='number']::-webkit-inner-spin-button {
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--accent);
-  color: #241a10;
+  color: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2367,7 +2476,7 @@ input[type='number']::-webkit-inner-spin-button {
 .daily-check.on {
   background: var(--accent);
   border-color: var(--accent);
-  color: #241a10;
+  color: var(--on-accent);
 }
 
 .track-row.is-picked {
@@ -2381,13 +2490,14 @@ input[type='number']::-webkit-inner-spin-button {
   text-align: right;
 }
 
-/* 选择模式底部操作条（贴在 TabBar 上方） */
+/* 选择模式底部操作条（贴在 TabBar / 迷你播放器上方） */
 .daily-bar {
   position: fixed;
   left: 12px;
   right: 12px;
-  bottom: calc(var(--tabbar-h) + var(--tabbar-pad-b) + 12px);
-  z-index: 55;
+  /* 预留迷你播放器高度（60px），避免操作条被盖住 */
+  bottom: calc(var(--tabbar-h) + var(--tabbar-pad-b) + 60px + 12px);
+  z-index: 56;
   max-width: 536px;
   margin: 0 auto;
   display: flex;
@@ -2408,6 +2518,16 @@ input[type='number']::-webkit-inner-spin-button {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-2);
+}
+
+/* iOS 悬浮胶囊（手机）：操作条必须避开底部迷你条，否则被盖住点不到 */
+:root[data-theme^='ios'] .daily-bar {
+  bottom: calc(var(--tabbar-float-b) + 50px + 12px);
+  z-index: 56;
+}
+
+:root[data-theme^='ios']:has(.mini-player) .daily-bar {
+  bottom: calc(var(--tabbar-float-b) + 50px + 58px + 12px);
 }
 
 /* ---------------- 外部歌单导入 ---------------- */
@@ -2515,6 +2635,68 @@ input[type='number']::-webkit-inner-spin-button {
   margin-top: 8px;
 }
 
+/* ---------------- 长按上下文菜单（iOS 式） ---------------- */
+
+.track-row {
+  user-select: none;
+  -webkit-user-select: none;
+  /* 长按不触发系统放大镜/文本选择 */
+  -webkit-touch-callout: none;
+}
+
+.ctx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.ctx-menu {
+  position: fixed;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--toast-bg);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.4);
+  animation: ctx-in 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  transform-origin: 50% 100%;
+}
+
+@keyframes ctx-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 11px;
+  font-size: 14.5px;
+  text-align: left;
+  color: var(--text);
+  transition: background 0.08s, color 0.08s;
+}
+
+.ctx-item.highlight {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.ctx-item:hover {
+  background: var(--accent-soft);
+}
+
+.ctx-item svg {
+  flex: none;
+}
+
 /* ---------------- 听歌识曲 ---------------- */
 
 .recognize-page .recognize-center {
@@ -2540,8 +2722,8 @@ input[type='number']::-webkit-inner-spin-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent), #ffc46e);
-  color: #241a10;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong, var(--accent)));
+  color: var(--on-accent);
   box-shadow: 0 12px 36px rgba(255, 180, 84, 0.3);
   transition: transform 0.12s;
 }
@@ -2985,7 +3167,8 @@ input[type='number']::-webkit-inner-spin-button {
 .code-btn {
   flex: none;
   min-width: 108px;
-  height: 45px;
+  /* 与 .input（padding 12 + 15px 字号）视觉高度对齐 */
+  height: 48px;
   margin-bottom: 0;
   white-space: nowrap;
 }
@@ -3068,8 +3251,8 @@ input[type='number']::-webkit-inner-spin-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent), #ffc46e);
-  color: #241a10;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong, var(--accent)));
+  color: var(--on-accent);
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
@@ -3213,6 +3396,7 @@ input[type='number']::-webkit-inner-spin-button {
   --danger: #d9544f;
   --danger-soft: rgba(217, 84, 79, 0.14);
 
+  --cream: #3a2f46;
   --edge-bg: #e9e1d0;
   --tabbar-bg: rgba(255, 253, 247, 0.92);
   --mini-bg: rgba(255, 253, 247, 0.97);
@@ -3220,6 +3404,7 @@ input[type='number']::-webkit-inner-spin-button {
   --overlay-bg: rgba(40, 28, 12, 0.38);
   --range-track: rgba(60, 45, 25, 0.16);
   --fp-bg: radial-gradient(120% 80% at 50% 0%, #f4ecd9 0%, #efe6d1 55%, #e7dcc4 100%);
+  --on-accent: #241a10;
 }
 
 :root[data-theme='neko-light'] body {
@@ -3231,6 +3416,63 @@ input[type='number']::-webkit-inner-spin-button {
 
 :root[data-theme='neko-light'] .fp-blur {
   opacity: 0.26;
+}
+
+/* 白天 Neko：每日推荐卡改为浅暖色，避免整块深紫砸在浅色页上 */
+:root[data-theme='neko-light'] .daily-card {
+  background:
+    radial-gradient(140% 120% at 85% -10%, rgba(224, 143, 31, 0.22), transparent 55%),
+    radial-gradient(120% 100% at 10% 120%, rgba(227, 100, 127, 0.16), transparent 55%),
+    linear-gradient(135deg, #fff8ec, #f7ecda);
+  border: 1px solid rgba(224, 143, 31, 0.28);
+}
+
+:root[data-theme='neko-light'] .daily-title {
+  color: var(--text);
+}
+
+:root[data-theme='neko-light'] .daily-sub,
+:root[data-theme='neko-light'] .daily-pick {
+  color: var(--text-2);
+}
+
+/* 自定义背景时吸顶栏：半透明 + 毛玻璃，避免滚动内容从标题下穿过不可读 */
+:root[data-custom-bg='1'] .home-head,
+:root[data-custom-bg='1'] .page-head,
+:root[data-custom-bg='1'] .search-bar-wrap {
+  background: linear-gradient(
+    to bottom,
+    rgba(22, 18, 28, 0.72) 55%,
+    rgba(22, 18, 28, 0.2) 82%,
+    transparent
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+:root[data-theme$='-light'][data-custom-bg='1'] .home-head,
+:root[data-theme$='-light'][data-custom-bg='1'] .page-head,
+:root[data-theme$='-light'][data-custom-bg='1'] .search-bar-wrap {
+  background: linear-gradient(
+    to bottom,
+    rgba(246, 240, 228, 0.82) 55%,
+    rgba(246, 240, 228, 0.35) 82%,
+    transparent
+  );
+}
+
+:root[data-theme='ios-light'][data-custom-bg='1'] .home-head,
+:root[data-theme='ios-light'][data-custom-bg='1'] .page-head,
+:root[data-theme='ios-light'][data-custom-bg='1'] .search-bar-wrap,
+:root[data-theme='apple-light'][data-custom-bg='1'] .home-head,
+:root[data-theme='apple-light'][data-custom-bg='1'] .page-head,
+:root[data-theme='apple-light'][data-custom-bg='1'] .search-bar-wrap {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.82) 55%,
+    rgba(255, 255, 255, 0.35) 82%,
+    transparent
+  );
 }
 
 /* ---------------- 站内 logo ---------------- */
@@ -3270,10 +3512,12 @@ input[type='number']::-webkit-inner-spin-button {
 
   --text: #000000;
   --text-2: rgba(60, 60, 67, 0.6); /* secondaryLabel */
-  --text-3: rgba(60, 60, 67, 0.3); /* tertiaryLabel */
+  /* tertiary 0.3 对 12px 小字对比度不足，抬到 0.48 */
+  --text-3: rgba(60, 60, 67, 0.48);
   --danger: #ff3b30;
   --danger-soft: rgba(255, 59, 48, 0.12);
 
+  --cream: #1c1c1e;
   --edge-bg: #e5e5ea;
   --range-track: rgba(120, 120, 128, 0.32);
   --overlay-bg: rgba(0, 0, 0, 0.35);
@@ -3292,6 +3536,7 @@ input[type='number']::-webkit-inner-spin-button {
   --glass-hi: rgba(255, 255, 255, 0.45); /* 边缘高光 */
   --glass-border: rgba(255, 255, 255, 0.28);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  --on-accent: #ffffff;
 }
 
 :root[data-theme='ios-dark'] {
@@ -3318,28 +3563,33 @@ input[type='number']::-webkit-inner-spin-button {
     --danger: #ff453a;
     --danger-soft: rgba(255, 69, 58, 0.2);
 
+    --cream: #f2f2f7;
     --edge-bg: #000000;
     --range-track: rgba(120, 120, 128, 0.5);
     --overlay-bg: rgba(0, 0, 0, 0.5);
     --toast-bg: rgba(44, 44, 46, var(--glass-alpha, 0.72));
     --tabbar-bg: rgba(28, 28, 30, var(--glass-alpha, 0.72));
     --mini-bg: rgba(28, 28, 30, var(--glass-alpha, 0.72));
+    /* 与 ios-light 对齐：浮动胶囊驱动 .page 底部留白 */
+    --tabbar-h: 70px;
 
     --fp-bg: radial-gradient(120% 80% at 50% 0%, #1f1f22 0%, #131316 55%, #050507 100%);
 
     --glass-hi: rgba(255, 255, 255, 0.12);
     --glass-border: rgba(255, 255, 255, 0.14);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --on-accent: #ffffff;
 }
 
 :root[data-theme^='ios'] body {
   background: var(--bg);
 }
 
-/* 悬浮胶囊 TabBar（iOS 26 风格） */
+/* 悬浮胶囊 TabBar（iOS 26 风格）
+   注意：不要用 transform 平移居中——fixed 元素带 transform 时，其内部
+   backdrop-filter 层（warp ::before）在 iOS Safari 会把模糊错误地
+   扩散到整个视口（"整个网页糊掉"的经典 bug）。居中交给 margin:auto */
 :root[data-theme^='ios'] .tabbar {
-  left: 50%;
-  transform: translateX(-50%);
   bottom: var(--tabbar-float-b);
   width: min(calc(100% - 40px), 480px);
   height: 50px;
@@ -3356,10 +3606,8 @@ input[type='number']::-webkit-inner-spin-button {
   filter: none;
 }
 
-/* 迷你播放器：悬浮玻璃条 */
+/* 迷你播放器：悬浮玻璃条（同样禁用 transform 居中，理由同上） */
 :root[data-theme^='ios'] .mini-player {
-  left: 50%;
-  transform: translateX(-50%);
   width: min(calc(100% - 24px), 520px);
   bottom: calc(var(--tabbar-float-b) + 58px);
   height: 58px;
@@ -3374,7 +3622,9 @@ input[type='number']::-webkit-inner-spin-button {
 :root[data-theme^='ios'] .mini-progress {
   top: 4px;
   left: 14px;
-  right: 14px;
+  right: auto;
+  /* 内联 width 是父级百分比，需用 max-width 收住左右 14px 内缩 */
+  max-width: calc(100% - 28px);
   border-radius: 2px;
   background: var(--accent);
   opacity: 0.6;
@@ -3444,7 +3694,8 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 :root[data-theme^='ios'] .btn-primary {
-  background: var(--accent);
+  background-color: var(--accent);
+  background-image: none;
   color: #fff;
   box-shadow: 0 6px 18px rgba(0, 122, 255, 0.3);
 }
@@ -3455,9 +3706,11 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 :root[data-theme^='ios'] .btn-play {
-  background: linear-gradient(135deg, var(--accent), #ffc46e);
-  color: #241a10;
+  /* 跟随系统蓝，不再残留 Neko 琥珀渐变 + 深棕字（对比度失败） */
+  background: var(--accent);
+  color: var(--on-accent);
   border-color: transparent;
+  box-shadow: 0 6px 18px rgba(0, 122, 255, 0.28);
 }
 
 :root[data-theme^='ios'] .btn-fav {
@@ -3556,6 +3809,11 @@ input[type='number']::-webkit-inner-spin-button {
   background: var(--surface-2);
 }
 
+/* 设置页玻璃不透明度滑块区块 */
+.glass-opacity-block {
+  margin-top: 4px;
+}
+
 /* 设置页 iOS 风格说明小字 */
 .theme-note {
   margin-top: 10px !important;
@@ -3625,9 +3883,10 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 @keyframes ios-mini-in {
+  /* 居中靠 margin:auto，禁止 translateX(-50%)（fixed+transform 会触发 iOS 糊屏/偏移） */
   from {
     opacity: 0;
-    transform: translate(-50%, 20px) scale(0.95);
+    transform: translateY(20px) scale(0.95);
   }
 }
 
@@ -3914,7 +4173,8 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 :root[data-theme^='apple'] .btn-primary {
-  background: var(--accent-strong);
+  background-color: var(--accent-strong);
+  background-image: none;
   color: #fff;
   box-shadow: none;
 }
@@ -3937,9 +4197,20 @@ input[type='number']::-webkit-inner-spin-button {
 }
 
 :root[data-theme^='apple'] .btn-play {
-  background: linear-gradient(135deg, var(--accent), #ffc46e);
-  color: #241a10;
+  background: var(--accent-strong);
+  color: #fff;
   border-color: transparent;
+  box-shadow: none;
+}
+
+:root[data-theme='apple-light'] {
+  --cream: #1d1d1f;
+  --on-accent: #ffffff;
+}
+
+:root[data-theme='apple-dark'] {
+  --cream: #f5f5f7;
+  --on-accent: #ffffff;
 }
 
 /* 卡片：无阴影纯色 */
@@ -4076,8 +4347,8 @@ input[type='number']::-webkit-inner-spin-button {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
@@ -4093,9 +4364,9 @@ input[type='number']::-webkit-inner-spin-button {
   display: none;
 }
 
-/* ---------------- 平板（≥768px） ---------------- */
+/* ---------------- 平板（≥768px 且纵向空间足够；横屏手机保持手机布局） ---------------- */
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (min-height: 600px) {
   /* 内容区：两栏布局的右半，页面在其中居中（relative 供迷你播放器对齐） */
   .content {
     position: relative;
@@ -4169,10 +4440,37 @@ input[type='number']::-webkit-inner-spin-button {
   /* 底部弹层：遮罩与弹层对齐内容区，不盖住侧边栏 */
   .overlay-bottom {
     left: 76px;
+    /* 平板：底部弹层改为悬浮居中卡片，摆脱手机味 */
+    align-items: center;
+    padding-bottom: 4vh;
+  }
+
+  /* 全屏播放器盖住整视口时，模态遮罩不能只从侧边栏右侧开始，
+     否则左侧条带仍可点到播放器（模态不完整） */
+  body:has(.full-player) .overlay-bottom {
+    left: 0;
+  }
+
+  /* 每日推荐选择条：侧边栏布局下左侧要让开侧栏，上方只有迷你播放器 */
+  .daily-bar {
+    left: calc(76px + 12px);
+    right: 12px;
+    bottom: calc(60px + var(--sab) + 12px);
+  }
+
+  body:has(.mini-player) .daily-bar {
+    bottom: calc(60px + var(--sab) + 12px + 60px);
+  }
+
+  /* 弹层打开时侧栏不可点，避免模态期间切路由残留弹层 */
+  body:has(.overlay) .tabbar {
+    pointer-events: none;
   }
 
   .sheet {
     max-width: 720px;
+    border-radius: 22px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
   }
 
   /* 首页"最新上架"：横向滚动 → 网格 */
@@ -4303,11 +4601,18 @@ input[type='number']::-webkit-inner-spin-button {
     margin: 0 auto;
     border-radius: 0;
   }
+
+  /* iOS 悬浮主题平板下迷你条贴在内容区底部（bottom:12 + 高度约58），
+     通用 .daily-bar 规则已抬高，这里再压一层主题优先级即可 */
+  :root[data-theme^='ios']:has(.full-player) .overlay-bottom,
+  :root[data-theme^='apple']:has(.full-player) .overlay-bottom {
+    left: 0;
+  }
 }
 
 /* ---------------- 平板横屏 / 桌面（≥1024px） ---------------- */
 
-@media (min-width: 1024px) {
+@media (min-width: 1024px) and (min-height: 600px) {
   /* 侧边栏加宽为标准栏（图标 + 文字） */
   .tabbar {
     width: 240px;
@@ -4331,6 +4636,11 @@ input[type='number']::-webkit-inner-spin-button {
 
   .overlay-bottom {
     left: 240px;
+  }
+
+  .daily-bar {
+    left: calc(240px + 12px);
+    right: 12px;
   }
 
   .playlist-grid {
@@ -4369,6 +4679,36 @@ input[type='number']::-webkit-inner-spin-button {
     margin: 0 -32px;
     padding-left: 32px;
     padding-right: 32px;
+  }
+
+  /* ---- 歌曲详情页宽屏双栏：左信息/操作，右歌词 ---- */
+  .music-page {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    column-gap: 36px;
+    align-items: start;
+  }
+
+  .music-page .page-head {
+    grid-column: 1 / -1;
+  }
+
+  .music-page .music-hero,
+  .music-page .music-actions,
+  .music-page .music-actions-row {
+    grid-column: 1;
+  }
+
+  .music-page .home-section {
+    grid-column: 2;
+    grid-row: 2 / 5;
+    position: sticky;
+    top: calc(var(--sat) + 12px);
+  }
+
+  .music-page .music-lyrics {
+    max-height: 60vh;
+    overflow-y: auto;
   }
 }
 
@@ -4474,8 +4814,8 @@ input[type='number']::-webkit-inner-spin-button {
   display: none;
 }
 
-/* 平板（≥768px）：左右并排分栏 */
-@media (min-width: 768px) {
+/* 平板（≥768px 且纵向空间足够）：左右并排分栏 */
+@media (min-width: 768px) and (min-height: 600px) {
   .fp-body {
     flex-direction: row;
     align-items: stretch;
@@ -4576,6 +4916,8 @@ input[type='number']::-webkit-inner-spin-button {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: transparent;
+  /* 自成堆叠上下文，限制内部 backdrop 层的影响范围 */
+  isolation: isolate;
 }
 
 :root[data-theme^='ios'] .tabbar::before,

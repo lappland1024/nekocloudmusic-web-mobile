@@ -29,6 +29,7 @@ const SUPPORTED = (() => {
 const WEBKIT = (() => {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent
+  if (/Firefox|Fxi\//.test(ua)) return false
   return /Safari\//.test(ua) && !/Chrom(e|ium)|Edg\//.test(ua)
 })()
 
@@ -195,8 +196,12 @@ export function useLiquidGlass<T extends HTMLElement>() {
     }
 
     const apply = () => {
-      // 仅 iOS 液态玻璃主题消费
-      if (!document.documentElement.dataset.theme?.startsWith('ios')) return
+      // 仅 iOS 液态玻璃主题消费；切到其他主题时清掉残留效果
+      if (!document.documentElement.dataset.theme?.startsWith('ios')) {
+        cleanup()
+        el.style.removeProperty('--lg-bdf')
+        return
+      }
       const w = Math.round(el.offsetWidth)
       const h = Math.round(el.offsetHeight)
       if (w < 8 || h < 8 || w * h > 260000) return
@@ -237,8 +242,12 @@ export function useLiquidGlass<T extends HTMLElement>() {
     apply()
     const ro = new ResizeObserver(() => apply())
     ro.observe(el)
+    // 主题切换时重建/清理（data-theme 变化不触发 resize）
+    const mo = new MutationObserver(() => apply())
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
     return () => {
       ro.disconnect()
+      mo.disconnect()
       cleanup()
       el.style.removeProperty('--lg-bdf')
     }

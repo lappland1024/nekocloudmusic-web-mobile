@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { changePassword } from '../api'
 import { useAuth } from '../store/auth'
@@ -154,9 +154,11 @@ export function Settings() {
                 step={1}
                 value={Math.round(glassOpacity * 100)}
                 onChange={(e) => setGlassOpacity(Number(e.target.value) / 100)}
-                style={{
-                  background: `linear-gradient(to right, var(--accent) ${Math.round(glassOpacity * 100)}%, var(--range-track) ${Math.round(glassOpacity * 100)}%)`,
-                }}
+                style={
+                  {
+                    ['--pct' as string]: `${Math.round(glassOpacity * 100)}%`,
+                  } as CSSProperties
+                }
                 aria-label={t('settings.glassOpacity')}
               />
             </label>
@@ -219,9 +221,11 @@ export function Settings() {
               step={1}
               value={Math.round(bgOpacity * 100)}
               onChange={(e) => setBgOpacity(Number(e.target.value) / 100)}
-              style={{
-                background: `linear-gradient(to right, var(--accent) ${Math.round(bgOpacity * 100)}%, var(--range-track) ${Math.round(bgOpacity * 100)}%)`,
-              }}
+              style={
+                {
+                  ['--pct' as string]: `${Math.round(bgOpacity * 100)}%`,
+                } as CSSProperties
+              }
               aria-label={t('appearance.opacity')}
             />
           </label>

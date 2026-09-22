@@ -70,7 +70,7 @@ export function MyPlaylists() {
 
   const removeMine = (p: Playlist) => {
     askConfirm({
-      title: t('playlist.delete'),
+      title: p.name,
       text: t('playlist.deleteConfirm'),
       danger: true,
       okText: t('common.delete'),
@@ -143,13 +143,8 @@ export function MyPlaylists() {
                       className="icon-btn pl-card-action"
                       onClick={(e) => {
                         e.stopPropagation()
-                        askConfirm({
-                          title: p.name,
-                          text: '',
-                          danger: true,
-                          okText: t('common.delete'),
-                          onOk: () => removeMine(p),
-                        })
+                        // 直接走带完整文案的删除确认，避免空正文二次弹窗
+                        removeMine(p)
                       }}
                       aria-label={t('playlist.delete')}
                     >

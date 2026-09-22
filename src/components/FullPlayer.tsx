@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { usePlayer, type PlayMode } from '../store/player'
 import { useFavorites } from '../store/favorites'
 import { getLyrics } from '../api'
@@ -32,9 +32,7 @@ function PlayerProgress() {
         value={Math.min(currentTime, duration || 0)}
         onChange={(e) => seek(Number(e.target.value))}
         className="range"
-        style={{
-          background: `linear-gradient(to right, var(--accent) ${pct}%, var(--range-track) ${pct}%)`,
-        }}
+        style={{ ['--pct' as string]: `${pct}%` } as CSSProperties}
         aria-label={t('player.progress')}
       />
       <span className="fp-time">{formatDur(duration)}</span>

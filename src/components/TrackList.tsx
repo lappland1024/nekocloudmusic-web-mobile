@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Music, Playlist, Track } from '../types'
 import { usePlayer, toTrack } from '../store/player'
@@ -50,8 +50,80 @@ export function TrackRow({
   onMore,
 }: TrackRowProps) {
   const t = useT()
+  const openContextMenu = useToast((s) => s.openContextMenu)
+  const closeContextMenu = useToast((s) => s.closeContextMenu)
+  const setContextHighlight = useToast((s) => s.setContextHighlight)
+  const commitContext = useToast((s) => s.commitContext)
+
+  // ---- 长按手势：350ms 弹出上下文菜单，按住滑动选择、松手执行 ----
+  const holdTimer = useRef<number | null>(null)
+  const startPos = useRef<{ x: number; y: number } | null>(null)
+  const longFired = useRef(false)
+  const suppressClick = useRef(false)
+
+  const clearHold = () => {
+    if (holdTimer.current != null) {
+      window.clearTimeout(holdTimer.current)
+      holdTimer.current = null
+    }
+  }
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return
+    // 落点在行内按钮（收藏/更多）上时不启动长按，避免与按钮点击冲突
+    if ((e.target as HTMLElement).closest('button')) return
+    startPos.current = { x: e.clientX, y: e.clientY }
+    longFired.current = false
+    clearHold()
+    holdTimer.current = window.setTimeout(() => {
+      longFired.current = true
+      suppressClick.current = true
+      openContextMenu(track, e.clientX, e.clientY)
+    }, 350)
+  }
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (longFired.current) {
+      // 手指滑动：命中测试菜单项，中继高亮（触摸事件被行隐式捕获，需经此转发）
+      const el = document.elementFromPoint(e.clientX, e.clientY)
+      const item = el?.closest('[data-ctx-item]')
+      setContextHighlight(item ? Number(item.getAttribute('data-ctx-item')) : -1)
+      return
+    }
+    // 未触发长按前的移动：判定为滚动，取消长按
+    const s = startPos.current
+    if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 10) clearHold()
+  }
+
+  const onPointerUp = () => {
+    if (longFired.current) commitContext()
+    clearHold()
+    startPos.current = null
+  }
+
+  const onPointerCancel = () => {
+    if (longFired.current) closeContextMenu()
+    clearHold()
+    startPos.current = null
+  }
+
   return (
-    <div className={`track-row ${playing ? 'is-playing' : ''}`} onClick={onPlay}>
+    <div
+      className={`track-row ${playing ? 'is-playing' : ''}`}
+      onClick={() => {
+        // 长按手势结束后的合成 click 不触发播放
+        if (suppressClick.current) {
+          suppressClick.current = false
+          return
+        }
+        onPlay()
+      }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {showIndex ? (
         <div className="track-rank">
           {playing ? <EqBars /> : <span className={index !== undefined && index < 3 ? 'rank-top' : ''}>{index !== undefined ? index + 1 : ''}</span>}
